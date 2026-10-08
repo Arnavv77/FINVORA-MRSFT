@@ -23,19 +23,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-const PublicLoginRoute: React.FC = () => {
-  const { isAuthenticated } = useFinancial();
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-  return <LoginPage />;
-};
-
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      {/* Login page — shown first when not authenticated */}
-      <Route path="/login" element={<PublicLoginRoute />} />
+      {/* Login page — directly accessible or redirected to when unauthenticated */}
+      <Route path="/login" element={<LoginPage />} />
 
       {/* Main application protected by authentication */}
       <Route
@@ -57,8 +49,10 @@ export const AppRoutes: React.FC = () => {
         <Route path="data-connections" element={<DataConnectionsPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="settings" element={<SettingsPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
+
+      {/* Fallback for any unknown route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

@@ -6,7 +6,7 @@ import { useFinancial } from '../../context/FinancialContext';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useFinancial();
+  const { login, isAuthenticated, logout } = useFinancial();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -163,6 +163,38 @@ export const LoginPage: React.FC = () => {
                 </p>
               </div>
             </div>
+
+            {/* Active Session Status if already authenticated */}
+            {isAuthenticated && (
+              <div className="p-3.5 rounded-2xl bg-blue-500/15 border border-blue-400/30 text-white space-y-2 backdrop-blur-md">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/80">Active Session:</span>
+                  <span className="font-semibold text-blue-300 truncate max-w-[180px]">
+                    {localStorage.getItem('FINVORA_USER_EMAIL') || 'cfo.demo@aethelgard.in'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/')}
+                    className="flex-1 py-1.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md transition-all cursor-pointer text-center"
+                  >
+                    Open Dashboard →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logout();
+                      setEmail('');
+                      setPassword('');
+                    }}
+                    className="py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-all cursor-pointer border border-white/20"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Login Form */}
             <form onSubmit={handleSignIn} className="space-y-4">
