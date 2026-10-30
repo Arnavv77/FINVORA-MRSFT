@@ -20,6 +20,7 @@ from .routers import (
     budget_router,
     copilot_router,
     ask_router,
+    cafie_router,
 )
 
 # ── Create tables (idempotent; use Alembic for production migrations) ─────────
@@ -57,6 +58,7 @@ app.include_router(simulate_router)
 app.include_router(budget_router)
 app.include_router(copilot_router)
 app.include_router(ask_router)
+app.include_router(cafie_router)
 
 
 

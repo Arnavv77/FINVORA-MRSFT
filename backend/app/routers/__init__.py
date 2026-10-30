@@ -6,6 +6,7 @@ from .simulate import router as simulate_router
 from .budget import router as budget_router
 from .copilot import router as copilot_router
 from .ask import router as ask_router
+from .cafie import router as cafie_router
 
 __all__ = [
     "dashboard_router",
@@ -16,5 +17,5 @@ __all__ = [
     "budget_router",
     "copilot_router",
     "ask_router",
+    "cafie_router",
 ]
-

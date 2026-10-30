@@ -116,3 +116,22 @@ class RiskAlert(Base):
 
     transaction = relationship("Transaction", back_populates="risk_alerts")
     vendor = relationship("Vendor", back_populates="risk_alerts")
+
+
+# ── Context-Aware Financial Intelligence Engine (CAFIE) Models ───────────────
+from .cafie_models import (
+    VendorProfile,
+    PurchaseOrder,
+    PurchaseOrderItem,
+    GoodsReceiptNote,
+    GoodsReceiptNoteItem,
+    VendorInvoiceRecord,
+    VendorInvoiceItem,
+    InventoryRecord,
+    StockMovement,
+    FinancialMemoryEvent,
+    FinancialMemoryLink,
+    CrossSystemRiskAssessment,
+    CAFIEApprovalRecord,
+    ERPIntegrationLog,
+)

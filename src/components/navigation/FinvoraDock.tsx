@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
+  Brain,
   Database,
   ShieldAlert,
   TrendingUp,
@@ -106,6 +107,13 @@ export const FinvoraDock: React.FC<FinvoraDockProps> = ({
       icon: <Sliders className={dockIconClass} />,
       onClick: () => handleNavigate('/what-if'),
       isActive: location.pathname === '/what-if'
+    },
+    {
+      id: 'context-intelligence',
+      label: 'Context Intelligence (CAFIE)',
+      icon: <Brain className={dockIconClass} />,
+      onClick: () => handleNavigate('/context-intelligence'),
+      isActive: location.pathname === '/context-intelligence'
     },
     {
       id: 'decisions-approvals',

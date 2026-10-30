@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
+  Brain,
   Database,
   ShieldAlert,
   TrendingUp,
@@ -71,6 +72,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       to: '/what-if',
       label: 'What-If Simulator',
       icon: <Sliders className="w-[18px] h-[18px] shrink-0" />
+    },
+    {
+      to: '/context-intelligence',
+      label: 'Context Intelligence (CAFIE)',
+      icon: <Brain className="w-[18px] h-[18px] shrink-0 text-indigo-500" />,
+      badge: 'AI',
+      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/50'
     },
     {
       to: '/decisions-approvals',

@@ -62,6 +62,8 @@ class TestMCPAgentFullSuite(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self):
         await self.ac.aclose()
+        from app.services.ask_agent import mcp_manager
+        await mcp_manager.close()
 
     async def test_a_mcp_server_standalone_and_list_tools(self):
         """(a) Run the MCP server standalone and list its tools."""

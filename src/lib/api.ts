@@ -284,3 +284,298 @@ export async function synthesizeSpeech(
     body: JSON.stringify({ text, language }),
   });
 }
+
+// ── Context-Aware Financial Intelligence Engine (CAFIE) Client APIs ──────────
+
+export interface CAFIEKPIs {
+  total_vendors_analysed: number;
+  historical_risk_events: number;
+  repeated_vendor_discrepancies: number;
+  invoice_mismatches: number;
+  duplicate_invoices: number;
+  inventory_value_at_risk: number;
+  working_capital_blocked: number;
+  high_risk_transactions: number;
+  estimated_financial_exposure_detected: number;
+}
+
+export interface CAFIERecentInvestigation {
+  id: number;
+  assessment_number: string;
+  vendor_name: string;
+  invoice_number: string;
+  composite_risk_score: number;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
+  estimated_financial_exposure: number;
+  reconciliation_status: string;
+  approval_status: string;
+  created_at: string;
+}
+
+export interface CAFIEOverviewResponse {
+  kpis: CAFIEKPIs;
+  risk_distribution: { name: string; value: number; color: string }[];
+  inventory_summary: {
+    total_inventory_value: number;
+    ageing_cohorts: { cohort: string; count: number; value: number }[];
+  };
+  recent_investigations: CAFIERecentInvestigation[];
+  connectors: {
+    sap_status: string;
+    wms_status: string;
+    ocr_status: string;
+  };
+}
+
+export interface CAFIEVendor {
+  vendor_id: number;
+  vendor_name: string;
+  vendor_code: string;
+  category: string;
+  risk_score: number;
+  behavioral_anomaly_score: number;
+  avg_invoice_amount: number;
+  avg_lead_time_days: number;
+  total_orders_completed: number;
+  historical_discrepancy_count: number;
+  cumulative_exposure: number;
+  verification_status: string;
+  bank_name: string;
+  bank_account_masked: string;
+  ifsc_code: string;
+}
+
+export interface CAFIEInventoryToCashResponse {
+  total_sku_count: number;
+  total_inventory_value: number;
+  excess_inventory_value: number;
+  working_capital_blocked: number;
+  cash_flow_impact_30d: number;
+  ageing_cohorts: { cohort: string; count: number; value: number }[];
+  category_summary: { category: string; total_items: number; total_value: number; excess_value: number }[];
+  reorder_recommendations: {
+    sku: string;
+    item_name: string;
+    category: string;
+    current_stock: number;
+    safety_stock: number;
+    reorder_point: number;
+    recommended_reorder_qty: number;
+    estimated_reorder_cost: number;
+    lead_time_days: number;
+    urgency: string;
+  }[];
+  uncertainty_margin_pct: number;
+  assumptions: string;
+}
+
+export interface CAFIEReconciliationItem {
+  id: number;
+  assessment_number: string;
+  vendor_id: number;
+  vendor_name: string;
+  po_number: string;
+  grn_number: string;
+  invoice_number: string;
+  total_invoice_amount: number;
+  three_way_match_score: number;
+  composite_risk_score: number;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
+  estimated_financial_exposure: number;
+  reconciliation_status: string;
+  approval_status: string;
+  is_synthetic_demo: boolean;
+  created_at: string;
+}
+
+export interface CAFIELineItemDiff {
+  sku: string;
+  description: string;
+  po_quantity: number;
+  grn_quantity: number;
+  invoice_quantity: number;
+  po_unit_price: number;
+  invoice_unit_price: number;
+  quantity_delta: number;
+  price_delta: number;
+  status: 'matched' | 'mismatch';
+}
+
+export interface CAFIEReconciliationDetailResponse {
+  assessment: {
+    id: number;
+    assessment_number: string;
+    vendor_id: number;
+    vendor_name: string;
+    po_number: string;
+    grn_number: string;
+    invoice_number: string;
+    invoice_total: number;
+    invoice_bank: string;
+    three_way_match_score: number;
+    vendor_behavior_score: number;
+    inventory_impact_score: number;
+    memory_risk_score: number;
+    composite_risk_score: number;
+    risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
+    estimated_financial_exposure: number;
+    reconciliation_status: string;
+    approval_status: string;
+    is_synthetic_demo: boolean;
+    discrepancy_details: {
+      match_score: number;
+      reconciliation_status: string;
+      has_quantity_mismatch: boolean;
+      has_price_mismatch: boolean;
+      has_tax_mismatch: boolean;
+      duplicate_found: boolean;
+      total_financial_exposure: number;
+      line_item_diffs: CAFIELineItemDiff[];
+    };
+    evidence: { layer: string; title: string; status: string; detail: string }[];
+    explanation: string;
+    recommended_action: string;
+    created_at: string;
+  };
+  recalled_memories: {
+    id: number;
+    event_category: string;
+    event_date: string;
+    severity: string;
+    financial_impact: number;
+    source_documents: Record<string, any>;
+    supporting_evidence: { metric: string; expected: string; actual: string; variance: string }[];
+    resolution_status: string;
+    authorized_manager_remarks?: string;
+  }[];
+  approval_history: {
+    id: number;
+    action: string;
+    previous_status: string;
+    new_status: string;
+    manager_remarks: string;
+    user_id: string;
+    user_role: string;
+    created_at: string;
+  }[];
+}
+
+export interface CAFIEMemoryEvent {
+  id: number;
+  vendor_id: number;
+  vendor_name: string;
+  transaction_ref: string;
+  event_category: string;
+  event_date: string;
+  severity: 'critical' | 'warning' | 'info';
+  financial_impact: number;
+  source_documents: Record<string, any>;
+  supporting_evidence: { metric: string; expected: string; actual: string; variance: string }[];
+  risk_category: string;
+  resolution_status: string;
+  authorized_manager_remarks?: string;
+}
+
+export interface CAFIEMemoryResponse {
+  events: CAFIEMemoryEvent[];
+  total_records: number;
+  cumulative_unresolved_exposure: number;
+}
+
+export interface CAFIEAuditLogItem {
+  id: number;
+  assessment_id: number;
+  assessment_number: string;
+  action: string;
+  previous_status: string;
+  new_status: string;
+  manager_remarks: string;
+  user_id: string;
+  user_role: string;
+  created_at: string;
+}
+
+export async function fetchCAFIEOverview(): Promise<CAFIEOverviewResponse> {
+  return request<CAFIEOverviewResponse>('/cafie/overview');
+}
+
+export async function fetchCAFIEVendors(search?: string, riskFilter?: string): Promise<{ vendors: CAFIEVendor[]; total_count: number }> {
+  const params = new URLSearchParams();
+  if (search) params.append('search', search);
+  if (riskFilter) params.append('risk_filter', riskFilter);
+  const q = params.toString() ? '?' + params.toString() : '';
+  return request<{ vendors: CAFIEVendor[]; total_count: number }>('/cafie/vendors' + q);
+}
+
+export async function fetchCAFIEInventoryToCash(): Promise<CAFIEInventoryToCashResponse> {
+  return request<CAFIEInventoryToCashResponse>('/cafie/inventory-to-cash');
+}
+
+export async function fetchCAFIEReconciliations(status?: string, riskLevel?: string): Promise<{ reconciliations: CAFIEReconciliationItem[]; count: number }> {
+  const params = new URLSearchParams();
+  if (status && status !== 'all') params.append('status', status);
+  if (riskLevel && riskLevel !== 'all') params.append('risk_level', riskLevel);
+  const q = params.toString() ? '?' + params.toString() : '';
+  return request<{ reconciliations: CAFIEReconciliationItem[]; count: number }>('/cafie/reconciliations' + q);
+}
+
+export async function fetchCAFIEReconciliationDetail(assessmentId: number | string): Promise<CAFIEReconciliationDetailResponse> {
+  return request<CAFIEReconciliationDetailResponse>('/cafie/reconciliations/' + assessmentId);
+}
+
+export async function fetchCAFIEMemory(vendorId?: number, category?: string, severity?: string, resolution?: string): Promise<CAFIEMemoryResponse> {
+  const params = new URLSearchParams();
+  if (vendorId) params.append('vendor_id', String(vendorId));
+  if (category && category !== 'all') params.append('category', category);
+  if (severity && severity !== 'all') params.append('severity', severity);
+  if (resolution && resolution !== 'all') params.append('resolution', resolution);
+  const q = params.toString() ? '?' + params.toString() : '';
+  return request<CAFIEMemoryResponse>('/cafie/memory' + q);
+}
+
+export async function fetchCAFIEVendorTimeline(vendorId: number): Promise<any> {
+  return request<any>('/cafie/memory/timeline/' + vendorId);
+}
+
+export async function takeCAFIEAction(
+  assessmentId: number,
+  action: 'approve' | 'reject' | 'hold_for_verification',
+  managerRemarks: string,
+  userId: string = 'manager_finvora',
+  userRole: string = 'manager'
+): Promise<any> {
+  return request<any>('/cafie/actions/' + assessmentId, {
+    method: 'POST',
+    body: JSON.stringify({
+      action,
+      manager_remarks: managerRemarks,
+      user_id: userId,
+      user_role: userRole,
+    }),
+  });
+}
+
+export async function fetchCAFIEAuditTrail(): Promise<{ audit_trail: CAFIEAuditLogItem[]; total_records: number }> {
+  return request<{ audit_trail: CAFIEAuditLogItem[]; total_records: number }>('/cafie/audit-trail');
+}
+
+export async function runCAFIELaptopsDemo(): Promise<any> {
+  return request<any>('/cafie/demo/run-laptops-scenario', {
+    method: 'POST',
+  });
+}
+
+export async function uploadCAFIEDocument(file: File): Promise<any> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const url = API_BASE + '/cafie/documents/extract';
+  const res = await fetch(url, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    throw new Error('Document extraction error [' + res.status + ']: ' + err);
+  }
+  return res.json();
+}
