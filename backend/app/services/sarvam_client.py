@@ -12,7 +12,7 @@ SARVAM_STT_URL = "https://api.sarvam.ai/speech-to-text"
 SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
 
 DEFAULT_PRIMARY_MODEL = "sarvam-105b"
-FALLBACK_MODEL = "sarvam-30b"
+FALLBACK_MODEL = "sarvam-105b-conversations"
 DEFAULT_STT_MODEL = "saaras:v4"
 FALLBACK_STT_MODEL = "saaras:v3"
 DEFAULT_TTS_MODEL = "bulbul:v3"

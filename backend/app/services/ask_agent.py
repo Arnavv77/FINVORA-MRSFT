@@ -288,7 +288,7 @@ async def run_agent_loop(
         try:
             resp_data = await call_sarvam_chat_raw(
                 messages=messages,
-                tools=sarvam_tools if not is_last_round else None,
+                tools=sarvam_tools,
                 tool_choice=tool_choice,
                 temperature=0.2,
                 max_tokens=600,
@@ -358,7 +358,7 @@ async def run_agent_loop(
         try:
             resp_data = await call_sarvam_chat_raw(
                 messages=messages,
-                tools=None,
+                tools=sarvam_tools,
                 tool_choice="none",
                 temperature=0.2,
                 max_tokens=600,
