@@ -21,7 +21,16 @@ DEFAULT_TTS_SPEAKER = "shubh"
 
 def get_sarvam_api_key() -> str:
     """Retrieve SARVAM_API_KEY from os.environ safely without logging values."""
-    return os.environ.get("SARVAM_API_KEY", "").strip()
+    key = os.environ.get("SARVAM_API_KEY", "").strip()
+    if not key or key.startswith("your_"):
+        from dotenv import load_dotenv
+        import pathlib
+        _backend_dir = pathlib.Path(__file__).resolve().parent.parent.parent
+        load_dotenv(_backend_dir / ".env")
+        load_dotenv(_backend_dir.parent / ".env")
+        load_dotenv()
+        key = os.environ.get("SARVAM_API_KEY", "").strip()
+    return key
 
 
 def get_sarvam_config() -> tuple[str, str]:

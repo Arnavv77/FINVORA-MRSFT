@@ -2,8 +2,12 @@ import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import pathlib
 from dotenv import load_dotenv
 
+_backend_dir = pathlib.Path(__file__).resolve().parent.parent
+load_dotenv(_backend_dir / '.env')
+load_dotenv(_backend_dir.parent / '.env')
 load_dotenv()
 
 from .database import engine, Base
