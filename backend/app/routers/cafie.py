@@ -48,6 +48,16 @@ from ..services.cafie_engine import (
 from ..services.doc_intel import extract_document_intelligence
 from ..services.erp_connectors import SAPConnector, WMSConnector
 
+from pydantic import BaseModel, Field
+from ..services.cafie_model2_engine import (
+    seed_orion_demo_scenario,
+    execute_cafie_pipeline,
+    process_human_action_v2,
+    get_vendor_timeline_v2,
+    get_inventory_summary_v2,
+)
+
+
 logger = logging.getLogger("finvora.cafie_router")
 
 router = APIRouter(prefix="/api/cafie", tags=["Context-Aware Financial Intelligence"])
@@ -475,3 +485,265 @@ def run_laptops_scenario(db: Session = Depends(get_db)):
     100 Laptops @ ₹40,000 | 100% 3-way document match | Prior Jan/Feb/Mar Risk Memory | Bank Change Detection | Payment Hold.
     """
     return seed_laptop_demonstration_scenario(db)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# PART 12 — MODEL 2 API ENDPOINTS
+# ═════════════════════════════════════════════════════════════════════════════
+
+class CAFIEActionPayload(BaseModel):
+    action: str = Field(..., description="Action: 'verify_bank' | 'approve' | 'reject' | 'hold'")
+    manager_remarks: str = Field("", description="Authorized manager remarks")
+    verification_confirmed: bool = Field(True, description="Whether bank change was verified authentic")
+    verification_method: str = Field("DIRECT_PHONE_CALLBACK_TO_CFO", description="Verification method")
+    user_id: str = Field("manager_finvora", description="Manager identity")
+    user_role: str = Field("manager", description="Role of the caller")
+    company_id: int = Field(1, description="Company tenant ID")
+
+
+@router.post("/demo/reset")
+def reset_orion_demo(company_id: int = Query(1), db: Session = Depends(get_db)):
+    """Seeds the deterministic synthetic demonstration scenario for Orion Tech Distributors."""
+    return seed_orion_demo_scenario(db, company_id=company_id)
+
+
+@router.get("/transactions")
+def get_all_transactions(company_id: int = Query(1), limit: int = Query(50), db: Session = Depends(get_db)):
+    """Retrieves all invoice transactions with their assessment status and risk scores."""
+    invoices = (
+        db.query(VendorInvoiceRecord)
+        .filter(VendorInvoiceRecord.company_id == company_id)
+        .order_by(VendorInvoiceRecord.invoice_date.desc())
+        .limit(limit)
+        .all()
+    )
+    result = []
+    for inv in invoices:
+        ass = db.query(CrossSystemRiskAssessment).filter(
+            CrossSystemRiskAssessment.invoice_id == inv.id,
+            CrossSystemRiskAssessment.company_id == company_id,
+        ).first()
+
+        po = inv.po
+        grn = po.grns[0] if (po and po.grns) else None
+        vendor = inv.vendor
+
+        result.append({
+            "id": inv.id,
+            "invoice_number": inv.invoice_number,
+            "invoice_date": inv.invoice_date.isoformat(),
+            "vendor_id": inv.vendor_id,
+            "vendor_name": vendor.name if vendor else "Unknown",
+            "po_number": po.po_number if po else "N/A",
+            "grn_number": grn.grn_number if grn else "N/A",
+            "subtotal_amount": inv.subtotal_amount,
+            "tax_amount": inv.tax_amount,
+            "total_amount": inv.total_amount,
+            "bank_name": inv.bank_name,
+            "bank_account_masked": f"••••{inv.bank_account_number[-4:]}" if inv.bank_account_number else "N/A",
+            "status": inv.status,
+            "has_assessment": ass is not None,
+            "assessment_id": ass.id if ass else None,
+            "assessment_number": ass.assessment_number if ass else None,
+            "version": ass.version if ass else 1,
+            "composite_risk_score": ass.composite_risk_score if ass else 0.0,
+            "risk_level": ass.risk_level if ass else "UNKNOWN",
+            "policy_gate": ass.policy_gate if ass else "CLEARED",
+            "payment_at_risk": ass.payment_at_risk if ass else 0.0,
+            "combined_exposure": ass.combined_exposure if ass else 0.0,
+            "sap_posting_status": ass.sap_posting_status if ass else None,
+        })
+    return {"transactions": result, "count": len(result)}
+
+
+@router.post("/transactions/{invoice_id}/assess")
+def assess_transaction(
+    invoice_id: int,
+    company_id: int = Query(1),
+    force_reassess: bool = Query(False),
+    db: Session = Depends(get_db),
+):
+    """
+    Executes the 13-stage deterministic CAFIE pipeline on a transaction.
+    Measures execution time in milliseconds for every stage.
+    """
+    assessment = execute_cafie_pipeline(
+        db=db,
+        invoice_id=invoice_id,
+        company_id=company_id,
+        force_reassess=force_reassess,
+    )
+    return {
+        "status": "success",
+        "assessment_id": assessment.id,
+        "assessment_number": assessment.assessment_number,
+        "version": assessment.version,
+        "composite_risk_score": assessment.composite_risk_score,
+        "risk_level": assessment.risk_level,
+        "policy_gate": assessment.policy_gate,
+        "policy_gate_reasons": assessment.policy_gate_reasons,
+        "payment_at_risk": assessment.payment_at_risk,
+        "historical_unresolved_exposure": assessment.historical_unresolved_exposure,
+        "combined_exposure": assessment.combined_exposure,
+        "exposure_averted": assessment.exposure_averted,
+        "reconciliation_status": assessment.reconciliation_status,
+        "approval_status": assessment.approval_status,
+        "explanation": assessment.explanation,
+        "recommended_action": assessment.recommended_action,
+        "evidence": assessment.evidence,
+        "discrepancy_details": assessment.discrepancy_details,
+        "pipeline_execution_stages": assessment.pipeline_execution_stages,
+        "total_execution_time_ms": assessment.total_execution_time_ms,
+        "sap_posting_status": assessment.sap_posting_status,
+    }
+
+
+@router.get("/assessments/{assessment_id}")
+def get_assessment_by_id(assessment_id: int, company_id: int = Query(1), db: Session = Depends(get_db)):
+    """Retrieves an existing assessment by ID. Deterministic and fast — no LLM or detection calls inside GET."""
+    assessment = db.query(CrossSystemRiskAssessment).filter(
+        CrossSystemRiskAssessment.id == assessment_id,
+        CrossSystemRiskAssessment.company_id == company_id,
+    ).first()
+    if not assessment:
+        raise HTTPException(status_code=404, detail=f"Assessment #{assessment_id} not found.")
+
+    invoice = assessment.invoice
+    po = assessment.po
+    grn = assessment.grn
+    vendor = assessment.vendor
+
+    return {
+        "id": assessment.id,
+        "assessment_number": assessment.assessment_number,
+        "version": assessment.version,
+        "config_version": assessment.config_version,
+        "invoice_id": assessment.invoice_id,
+        "invoice_number": invoice.invoice_number if invoice else "N/A",
+        "invoice_total": invoice.total_amount if invoice else 0.0,
+        "vendor_id": assessment.vendor_id,
+        "vendor_name": vendor.name if vendor else "N/A",
+        "po_number": po.po_number if po else "N/A",
+        "grn_number": grn.grn_number if grn else "N/A",
+        "composite_risk_score": assessment.composite_risk_score,
+        "risk_level": assessment.risk_level,
+        "policy_gate": assessment.policy_gate,
+        "policy_gate_reasons": assessment.policy_gate_reasons,
+        "payment_at_risk": assessment.payment_at_risk,
+        "historical_unresolved_exposure": assessment.historical_unresolved_exposure,
+        "combined_exposure": assessment.combined_exposure,
+        "exposure_averted": assessment.exposure_averted,
+        "three_way_match_score": assessment.three_way_match_score,
+        "reconciliation_status": assessment.reconciliation_status,
+        "approval_status": assessment.approval_status,
+        "explanation": assessment.explanation,
+        "recommended_action": assessment.recommended_action,
+        "evidence": assessment.evidence,
+        "discrepancy_details": assessment.discrepancy_details,
+        "historical_memory_refs": assessment.historical_memory_refs,
+        "pipeline_execution_stages": assessment.pipeline_execution_stages,
+        "total_execution_time_ms": assessment.total_execution_time_ms,
+        "sap_posting_status": assessment.sap_posting_status,
+        "created_at": assessment.created_at.isoformat() if assessment.created_at else None,
+        "updated_at": assessment.updated_at.isoformat() if assessment.updated_at else None,
+    }
+
+
+@router.post("/assessments/{assessment_id}/action")
+def take_assessment_action_v2(
+    assessment_id: int,
+    payload: CAFIEActionPayload,
+    db: Session = Depends(get_db),
+):
+    """
+    Executes a manager verification or governance action.
+    - If action == 'verify_bank': updates bank details, writes feedback event, re-assesses (score drops to 32, gate clears).
+    - If action == 'approve': returns HTTP 409 Conflict if policy gate is active!
+    """
+    return process_human_action_v2(
+        db=db,
+        assessment_id=assessment_id,
+        action=payload.action,
+        manager_remarks=payload.manager_remarks,
+        verification_confirmed=payload.verification_confirmed,
+        verification_method=payload.verification_method,
+        company_id=payload.company_id,
+        user_id=payload.user_id,
+        user_role=payload.user_role,
+    )
+
+
+@router.post("/assessments/{assessment_id}/reassess")
+def trigger_reassessment(
+    assessment_id: int,
+    company_id: int = Query(1),
+    db: Session = Depends(get_db),
+):
+    """Explicitly triggers a reassessment, creating a new version."""
+    ass = db.query(CrossSystemRiskAssessment).filter(
+        CrossSystemRiskAssessment.id == assessment_id,
+        CrossSystemRiskAssessment.company_id == company_id,
+    ).first()
+    if not ass:
+        raise HTTPException(status_code=404, detail=f"Assessment #{assessment_id} not found.")
+
+    updated = execute_cafie_pipeline(
+        db=db,
+        invoice_id=ass.invoice_id,
+        company_id=company_id,
+        force_reassess=True,
+    )
+    return {
+        "status": "success",
+        "assessment_id": updated.id,
+        "assessment_number": updated.assessment_number,
+        "version": updated.version,
+        "composite_risk_score": updated.composite_risk_score,
+        "risk_level": updated.risk_level,
+        "policy_gate": updated.policy_gate,
+        "approval_status": updated.approval_status,
+    }
+
+
+@router.get("/vendors/{vendor_id}/timeline")
+def get_vendor_timeline(vendor_id: int, company_id: int = Query(1), db: Session = Depends(get_db)):
+    """Retrieves Tab 2 Vendor Memory timeline, baselines, and fill rate."""
+    return get_vendor_timeline_v2(db=db, vendor_id=vendor_id, company_id=company_id)
+
+
+@router.get("/inventory/summary")
+def get_inventory_summary(company_id: int = Query(1), db: Session = Depends(get_db)):
+    """Retrieves Tab 3 Inventory-to-Cash metrics from seeded database records."""
+    return get_inventory_summary_v2(db=db, company_id=company_id)
+
+
+@router.get("/audit")
+def get_governance_audit(company_id: int = Query(1), limit: int = Query(50), db: Session = Depends(get_db)):
+    """Retrieves the immutable audit trail of manager actions."""
+    records = (
+        db.query(CAFIEApprovalRecord)
+        .filter(CAFIEApprovalRecord.company_id == company_id)
+        .order_by(CAFIEApprovalRecord.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return {
+        "audit_trail": [
+            {
+                "id": r.id,
+                "assessment_id": r.assessment_id,
+                "assessment_number": r.assessment.assessment_number if r.assessment else "N/A",
+                "action": r.action,
+                "previous_status": r.previous_status,
+                "new_status": r.new_status,
+                "manager_remarks": r.manager_remarks,
+                "verification_method": r.verification_method,
+                "verification_date": r.verification_date.isoformat() if r.verification_date else None,
+                "user_id": r.user_id,
+                "user_role": r.user_role,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in records
+        ],
+        "count": len(records),
+    }

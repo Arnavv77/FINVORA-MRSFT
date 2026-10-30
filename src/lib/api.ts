@@ -579,3 +579,208 @@ export async function uploadCAFIEDocument(file: File): Promise<any> {
   }
   return res.json();
 }
+
+
+// ── Model 2 Dedicated Typed APIs ──────────────────────────────────────────────
+
+export interface CAFIEMODEL2Transaction {
+  id: number;
+  invoice_number: string;
+  invoice_date: string;
+  vendor_id: number;
+  vendor_name: string;
+  po_number: string;
+  grn_number: string;
+  subtotal_amount: number;
+  tax_amount: number;
+  total_amount: number;
+  bank_name: string;
+  bank_account_masked: string;
+  status: string;
+  has_assessment: boolean;
+  assessment_id: number | null;
+  assessment_number: string | null;
+  version: number;
+  composite_risk_score: number;
+  risk_level: string;
+  policy_gate: string;
+  payment_at_risk: number;
+  combined_exposure: number;
+  sap_posting_status: string | null;
+}
+
+export interface CAFIEMODEL2PipelineStage {
+  stage: string;
+  execution_time_ms: number;
+  status: string;
+}
+
+export interface CAFIEMODEL2EvidenceItem {
+  id: string;
+  layer: string;
+  rule_code: string;
+  title: string;
+  explanation: string;
+  weight: number;
+  supporting_events: string[];
+  financial_exposure: number;
+}
+
+export interface CAFIEMODEL2Assessment {
+  id: number;
+  assessment_number: string;
+  version: number;
+  config_version: string;
+  invoice_id: number;
+  invoice_number: string;
+  invoice_total: number;
+  vendor_id: number;
+  vendor_name: string;
+  po_number: string;
+  grn_number: string;
+  composite_risk_score: number;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
+  policy_gate: string;
+  policy_gate_reasons: string[];
+  payment_at_risk: number;
+  historical_unresolved_exposure: number;
+  combined_exposure: number;
+  exposure_averted: number;
+  three_way_match_score: number;
+  reconciliation_status: string;
+  approval_status: string;
+  explanation: string;
+  recommended_action: string;
+  evidence: CAFIEMODEL2EvidenceItem[];
+  discrepancy_details: any;
+  historical_memory_refs: number[];
+  pipeline_execution_stages: CAFIEMODEL2PipelineStage[];
+  total_execution_time_ms: number;
+  sap_posting_status: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CAFIEMODEL2VendorTimeline {
+  vendor_id: number;
+  vendor_name: string;
+  category: string;
+  vendor_code: string;
+  delivery_fill_rate: number;
+  historical_avg_order_value: number;
+  weighted_avg_unit_price: number;
+  historical_unresolved_exposure: number;
+  discrepancy_count: number;
+  events: {
+    id: number;
+    date: string;
+    category: string;
+    severity: string;
+    impact: number;
+    status: string;
+    source_documents: any;
+    supporting_evidence: any;
+    remarks: string;
+  }[];
+}
+
+export interface CAFIEMODEL2InventorySummary {
+  total_sku_count: number;
+  total_stock_value: number;
+  total_excess_inventory_value: number;
+  working_capital_blocked: number;
+  demo_sku: {
+    sku: string;
+    name: string;
+    opening_stock: number;
+    receipt_qty: number;
+    stock_after_receipt: number;
+    monthly_demand: number;
+    demand_90d: number;
+    demand_uncertainty: number;
+    excess_stock: number;
+    excess_value: number;
+    days_of_cover: number;
+    unit_cost: number;
+    six_month_issues: number[];
+    forecast_range: string;
+  };
+  all_items: any[];
+}
+
+export interface CAFIEMODEL2AuditItem {
+  id: number;
+  assessment_id: number;
+  assessment_number: string;
+  action: string;
+  previous_status: string;
+  new_status: string;
+  manager_remarks: string;
+  verification_method: string | null;
+  verification_date: string | null;
+  user_id: string;
+  user_role: string;
+  created_at: string;
+}
+
+export async function resetCAFIEMODEL2Demo(companyId: number = 1): Promise<any> {
+  return request<any>('/cafie/demo/reset?company_id=' + companyId, { method: 'POST' });
+}
+
+export async function fetchCAFIEMODEL2Transactions(companyId: number = 1): Promise<{ transactions: CAFIEMODEL2Transaction[]; count: number }> {
+  return request<{ transactions: CAFIEMODEL2Transaction[]; count: number }>('/cafie/transactions?company_id=' + companyId);
+}
+
+export async function assessCAFIEMODEL2Transaction(invoiceId: number, forceReassess: boolean = false, companyId: number = 1): Promise<any> {
+  return request<any>('/cafie/transactions/' + invoiceId + '/assess?company_id=' + companyId + '&force_reassess=' + forceReassess, {
+    method: 'POST',
+  });
+}
+
+export async function fetchCAFIEMODEL2Assessment(assessmentId: number, companyId: number = 1): Promise<CAFIEMODEL2Assessment> {
+  return request<CAFIEMODEL2Assessment>('/cafie/assessments/' + assessmentId + '?company_id=' + companyId);
+}
+
+export async function takeCAFIEMODEL2Action(
+  assessmentId: number,
+  payload: {
+    action: string;
+    manager_remarks?: string;
+    verification_confirmed?: boolean;
+    verification_method?: string;
+    user_id?: string;
+    user_role?: string;
+    company_id?: number;
+  }
+): Promise<any> {
+  return request<any>('/cafie/assessments/' + assessmentId + '/action', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: payload.action,
+      manager_remarks: payload.manager_remarks || '',
+      verification_confirmed: payload.verification_confirmed !== undefined ? payload.verification_confirmed : true,
+      verification_method: payload.verification_method || 'DIRECT_PHONE_CALLBACK_TO_CFO',
+      user_id: payload.user_id || 'manager_finvora',
+      user_role: payload.user_role || 'manager',
+      company_id: payload.company_id || 1,
+    }),
+  });
+}
+
+export async function reassessCAFIEMODEL2Assessment(assessmentId: number, companyId: number = 1): Promise<any> {
+  return request<any>('/cafie/assessments/' + assessmentId + '/reassess?company_id=' + companyId, {
+    method: 'POST',
+  });
+}
+
+export async function fetchCAFIEMODEL2VendorTimeline(vendorId: number, companyId: number = 1): Promise<CAFIEMODEL2VendorTimeline> {
+  return request<CAFIEMODEL2VendorTimeline>('/cafie/vendors/' + vendorId + '/timeline?company_id=' + companyId);
+}
+
+export async function fetchCAFIEMODEL2InventorySummary(companyId: number = 1): Promise<CAFIEMODEL2InventorySummary> {
+  return request<CAFIEMODEL2InventorySummary>('/cafie/inventory/summary?company_id=' + companyId);
+}
+
+export async function fetchCAFIEMODEL2Audit(companyId: number = 1): Promise<{ audit_trail: CAFIEMODEL2AuditItem[]; count: number }> {
+  return request<{ audit_trail: CAFIEMODEL2AuditItem[]; count: number }>('/cafie/audit?company_id=' + companyId);
+}

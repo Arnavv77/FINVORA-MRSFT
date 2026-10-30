@@ -24,6 +24,7 @@ class VendorProfile(Base):
     __tablename__ = "cafie_vendor_profiles"
 
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, nullable=False, default=1, index=True)
     vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False, unique=True, index=True)
     vendor_code = Column(String(50), nullable=True)
     gst_number = Column(String(50), nullable=True)
@@ -36,6 +37,8 @@ class VendorProfile(Base):
     avg_lead_time_days = Column(Float, nullable=False, default=7.0)
     total_orders_completed = Column(Integer, nullable=False, default=0)
     discrepancy_count = Column(Integer, nullable=False, default=0)
+    delivery_fill_rate = Column(Float, nullable=False, default=100.0)
+    weighted_avg_unit_price = Column(Float, nullable=False, default=0.0)
     risk_score = Column(Float, nullable=False, default=15.0)  # 0 - 100
     behavioral_anomaly_score = Column(Float, nullable=False, default=10.0)
     last_bank_change_date = Column(Date, nullable=True)
@@ -49,6 +52,7 @@ class PurchaseOrder(Base):
     __tablename__ = "cafie_purchase_orders"
 
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, nullable=False, default=1, index=True)
     po_number = Column(String(100), nullable=False, unique=True, index=True)
     vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False, index=True)
     department = Column(String(100), nullable=False, default="Operations")
@@ -88,6 +92,7 @@ class GoodsReceiptNote(Base):
     __tablename__ = "cafie_goods_receipt_notes"
 
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, nullable=False, default=1, index=True)
     grn_number = Column(String(100), nullable=False, unique=True, index=True)
     po_id = Column(Integer, ForeignKey("cafie_purchase_orders.id"), nullable=False, index=True)
     vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False, index=True)
@@ -127,6 +132,7 @@ class VendorInvoiceRecord(Base):
     __tablename__ = "cafie_vendor_invoices"
 
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, nullable=False, default=1, index=True)
     invoice_number = Column(String(100), nullable=False, unique=True, index=True)
     po_id = Column(Integer, ForeignKey("cafie_purchase_orders.id"), nullable=True, index=True)
     vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False, index=True)
@@ -169,6 +175,7 @@ class InventoryRecord(Base):
     __tablename__ = "cafie_inventory_records"
 
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, nullable=False, default=1, index=True)
     sku = Column(String(100), nullable=False, unique=True, index=True)
     item_name = Column(String(255), nullable=False)
     category = Column(String(100), nullable=False, default="Hardware")
@@ -193,6 +200,7 @@ class StockMovement(Base):
     __tablename__ = "cafie_stock_movements"
 
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, nullable=False, default=1, index=True)
     inventory_id = Column(Integer, ForeignKey("cafie_inventory_records.id"), nullable=False, index=True)
     movement_date = Column(Date, nullable=False, index=True)
     movement_type = Column(String(50), nullable=False)  # inward_grn / outward_consumption / shrinkage_adjustment / transfer
@@ -209,6 +217,7 @@ class FinancialMemoryEvent(Base):
     __tablename__ = "cafie_financial_memory_events"
 
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, nullable=False, default=1, index=True)
     vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False, index=True)
     transaction_ref = Column(String(100), nullable=True, index=True)
     event_category = Column(String(100), nullable=False, index=True)
@@ -232,6 +241,7 @@ class FinancialMemoryLink(Base):
     __tablename__ = "cafie_financial_memory_links"
 
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, nullable=False, default=1, index=True)
     source_event_id = Column(Integer, ForeignKey("cafie_financial_memory_events.id"), nullable=False, index=True)
     target_event_id = Column(Integer, ForeignKey("cafie_financial_memory_events.id"), nullable=False, index=True)
     link_type = Column(String(50), nullable=False, default="recurring_pattern")
@@ -248,6 +258,19 @@ class CrossSystemRiskAssessment(Base):
     __tablename__ = "cafie_risk_assessments"
 
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, nullable=False, default=1, index=True)
+    version = Column(Integer, nullable=False, default=1)
+    idempotency_key = Column(String(128), nullable=True, index=True)
+    config_version = Column(String(50), nullable=False, default="2.0.0")
+    policy_gate = Column(String(50), nullable=False, default="CLEARED")
+    policy_gate_reasons = Column(JSON, nullable=False, default=list)
+    payment_at_risk = Column(Float, nullable=False, default=0.0)
+    historical_unresolved_exposure = Column(Float, nullable=False, default=0.0)
+    combined_exposure = Column(Float, nullable=False, default=0.0)
+    exposure_averted = Column(Float, nullable=False, default=0.0)
+    pipeline_execution_stages = Column(JSON, nullable=False, default=list)
+    total_execution_time_ms = Column(Float, nullable=False, default=0.0)
+    sap_posting_status = Column(String(50), nullable=True)
     assessment_number = Column(String(100), nullable=False, unique=True, index=True)
     po_id = Column(Integer, ForeignKey("cafie_purchase_orders.id"), nullable=True, index=True)
     grn_id = Column(Integer, ForeignKey("cafie_goods_receipt_notes.id"), nullable=True, index=True)
@@ -287,6 +310,9 @@ class CAFIEApprovalRecord(Base):
     __tablename__ = "cafie_approval_records"
 
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer, nullable=False, default=1, index=True)
+    verification_method = Column(String(100), nullable=True)
+    verification_date = Column(Date, nullable=True)
     assessment_id = Column(Integer, ForeignKey("cafie_risk_assessments.id"), nullable=False, index=True)
     action = Column(String(50), nullable=False)  # approve | reject | hold_for_verification | request_documents
     previous_status = Column(String(50), nullable=False)
