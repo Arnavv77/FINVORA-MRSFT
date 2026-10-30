@@ -157,3 +157,4 @@ def test_complete_laptop_demonstration_scenario(db_session):
     assert res["approval_status"] == "held_for_verification", "Payment must be held"
     assert res["financial_exposure"] >= 4000000.0, "Entire invoice amount must be flagged as exposed"
     assert "ByteCraft Systems" in res["vendor"]
+

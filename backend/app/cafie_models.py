@@ -311,3 +311,4 @@ class ERPIntegrationLog(Base):
     response_data = Column(JSON, nullable=False, default=dict)
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
+

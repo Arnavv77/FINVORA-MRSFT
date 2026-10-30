@@ -142,3 +142,4 @@ class WMSConnector:
         db.add(log)
         db.commit()
         return res
+
