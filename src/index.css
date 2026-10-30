@@ -3,11 +3,13 @@
 @tailwind utilities;
 
 @layer base {
-  :root, .light {
+
+  :root,
+  .light {
     --app-bg: #F8F9FA;
     --app-bg-gradient: radial-gradient(ellipse 90% 60% at 20% -10%, rgba(245, 158, 11, 0.07) 0%, transparent 60%),
-                       radial-gradient(ellipse 70% 50% at 85% 15%, rgba(56, 189, 248, 0.05) 0%, transparent 60%),
-                       #F8F9FA;
+      radial-gradient(ellipse 70% 50% at 85% 15%, rgba(56, 189, 248, 0.05) 0%, transparent 60%),
+      #F8F9FA;
     --sidebar-bg: rgba(255, 255, 255, 0.90);
     --sidebar-border: rgba(226, 232, 240, 0.90);
     --topbar-bg: rgba(255, 255, 255, 0.88);
@@ -67,8 +69,8 @@
   .dark {
     --app-bg: #101110;
     --app-bg-gradient: radial-gradient(ellipse 90% 60% at 20% -10%, rgba(245, 166, 35, 0.05) 0%, transparent 60%),
-                       radial-gradient(ellipse 70% 50% at 85% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
-                       #101110;
+      radial-gradient(ellipse 70% 50% at 85% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
+      #101110;
     --sidebar-bg: rgba(20, 22, 21, 0.94);
     --sidebar-border: rgba(255, 255, 255, 0.07);
     --topbar-bg: rgba(16, 17, 16, 0.90);
@@ -139,9 +141,11 @@
     width: 6px;
     height: 6px;
   }
+
   ::-webkit-scrollbar-track {
     background: var(--scrollbar-track);
   }
+
   ::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb);
     border-radius: 9999px;
@@ -156,9 +160,9 @@
     border: 1px solid var(--card-border);
     box-shadow: var(--card-shadow);
     transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color 0.24s ease,
-                background-color 0.24s ease;
+      box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.24s ease,
+      background-color 0.24s ease;
     will-change: transform, box-shadow;
   }
 
@@ -215,17 +219,22 @@
     0% {
       transform: translateX(-160%) skewX(-20deg);
     }
-    30%, 100% {
+
+    30%,
+    100% {
       transform: translateX(220%) skewX(-20deg);
     }
   }
 
   @keyframes ai-pulse-glow {
-    0%, 100% {
+
+    0%,
+    100% {
       opacity: 0.65;
       transform: scale(1);
       filter: blur(8px);
     }
+
     50% {
       opacity: 0.98;
       transform: scale(1.08);
@@ -234,10 +243,13 @@
   }
 
   @keyframes ai-star-twinkle {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: scale(1) rotate(0deg);
       opacity: 0.9;
     }
+
     50% {
       transform: scale(1.22) rotate(14deg);
       opacity: 1;
@@ -262,14 +274,12 @@
     left: 0;
     width: 65%;
     height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.2) 20%,
-      rgba(255, 255, 255, 0.85) 50%,
-      rgba(255, 255, 255, 0.2) 80%,
-      transparent 100%
-    );
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.2) 20%,
+        rgba(255, 255, 255, 0.85) 50%,
+        rgba(255, 255, 255, 0.2) 80%,
+        transparent 100%);
     pointer-events: none;
     transform: translateX(-160%) skewX(-20deg);
     animation: ai-shimmer 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;

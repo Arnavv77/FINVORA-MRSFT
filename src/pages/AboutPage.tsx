@@ -28,15 +28,6 @@ export const AboutPage: React.FC = () => {
       {/* 1. Header Banner */}
       <div className="p-6 rounded-2xl glass-card border border-[var(--border-subtle)] flex flex-col lg:flex-row lg:items-center justify-between gap-5">
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-              <Info className="w-3.5 h-3.5" />
-              About FINVORA
-            </span>
-            <span className="text-[11px] font-semibold text-[var(--text-tertiary)] bg-[var(--surface-muted)] px-2.5 py-1 rounded-md border border-[var(--border-subtle)]">
-              Architecture v2.17 • Showcase Certified
-            </span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
             Autonomous Financial Intelligence Platform
           </h1>

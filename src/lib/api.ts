@@ -71,7 +71,6 @@ export async function fetchDashboardSummary(): Promise<DashboardSummaryResponse>
 export async function fetchRiskAlerts(status?: string): Promise<AnomalyRecord[]> {
   const query = status && status !== 'all' ? `?status=${encodeURIComponent(status)}` : '?status=all';
   const data = await request<AnomalyRecord[]>(`/risks${query}`);
-  // Normalize string ID if numeric
   return data.map(item => ({
     ...item,
     id: String(item.id),
@@ -177,3 +176,111 @@ export async function fetchScenarioRecommendation(
   });
 }
 
+/**
+ * 9. Ask FINVORA - MCP-based Bilingual Voice & Text Agent powered by Sarvam AI
+ */
+export interface ToolTraceItem {
+  tool: string;
+  arguments: Record<string, any>;
+  ok: boolean;
+  ms: number;
+}
+
+export interface AskFinvoraResponse {
+  answer: string;
+  sources: string[];
+  disclaimer: string;
+  language?: string;
+  tool_trace?: ToolTraceItem[];
+}
+
+export interface VoiceAskResponse {
+  transcript: string;
+  answer: string;
+  audio_base64?: string;
+  mime?: string;
+  language?: string;
+  tool_trace?: ToolTraceItem[];
+  sources?: string[];
+  disclaimer?: string;
+  error?: string | null;
+}
+
+export async function askFinvora(
+  message: string,
+  history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+  language: 'auto' | 'en-IN' | 'hi-IN' = 'auto'
+): Promise<AskFinvoraResponse> {
+  return request<AskFinvoraResponse>('/ask', {
+    method: 'POST',
+    body: JSON.stringify({ message, history, language }),
+  });
+}
+
+export async function askFinvoraVoice(
+  audioBlob: Blob,
+  language: 'auto' | 'en-IN' | 'hi-IN' = 'auto',
+  filename: string = 'recording.webm'
+): Promise<VoiceAskResponse> {
+  const formData = new FormData();
+  formData.append('file', audioBlob, filename);
+  formData.append('language', language);
+
+  const url = `${API_BASE}/ask/voice`;
+  const res = await fetch(url, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    throw new Error(`Voice ask error [${res.status}]: ${err}`);
+  }
+
+  return res.json() as Promise<VoiceAskResponse>;
+}
+
+export interface TranscribeResponse {
+  transcript: string;
+  language_code: string;
+  error?: string | null;
+}
+
+export async function transcribeAudio(
+  audioBlob: Blob,
+  languageHint: 'auto' | 'en-IN' | 'hi-IN' = 'auto',
+  filename: string = 'recording.wav'
+): Promise<TranscribeResponse> {
+  const formData = new FormData();
+  formData.append('file', audioBlob, filename);
+  formData.append('language_hint', languageHint);
+
+  const url = `${API_BASE}/ask/transcribe`;
+  const res = await fetch(url, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    throw new Error(`Transcription error [${res.status}]: ${err}`);
+  }
+
+  return res.json() as Promise<TranscribeResponse>;
+}
+
+export interface SpeakResponse {
+  audio_base64: string;
+  mime: string;
+  error?: string | null;
+}
+
+export async function synthesizeSpeech(
+  text: string,
+  language: 'en-IN' | 'hi-IN' = 'en-IN'
+): Promise<SpeakResponse> {
+  return request<SpeakResponse>('/ask/speak', {
+    method: 'POST',
+    body: JSON.stringify({ text, language }),
+  });
+}

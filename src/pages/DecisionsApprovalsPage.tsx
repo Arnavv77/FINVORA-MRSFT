@@ -106,14 +106,6 @@ export const DecisionsApprovalsPage: React.FC = () => {
       {/* Top Banner & Tab Controls */}
       <div className="p-5 rounded-2xl glass-card border border-[var(--border-subtle)] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-500">
-              Autonomous Governance & Workflow Engine
-            </span>
-            <span className="text-[10px] text-[var(--text-secondary)] bg-[var(--surface-muted)] px-2 py-0.5 rounded border border-[var(--border-subtle)]">
-              Role: {role === 'manager' ? 'Finance Manager (Approver)' : 'Finance Analyst (Submitter)'}
-            </span>
-          </div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
             Decisions, Approvals & Policy Routing
           </h2>

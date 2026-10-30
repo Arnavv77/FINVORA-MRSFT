@@ -208,7 +208,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenSidebar }) => {
                 if (location.pathname === '/what-if') {
                   window.dispatchEvent(new CustomEvent('focus-what-if-composer'));
                 } else {
-                  setCopilotOpen(!copilotOpen);
+                  window.dispatchEvent(new CustomEvent('open-ask-finvora'));
                 }
               }}
               className={`relative overflow-hidden flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 active:scale-95 border border-amber-200/90 dark:border-amber-300/50 shadow-[0_2px_14px_rgba(245,158,11,0.45)] cursor-pointer select-none ${

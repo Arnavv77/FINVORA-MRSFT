@@ -42,11 +42,6 @@ export const SettingsPage: React.FC = () => {
       {/* Top Banner */}
       <div className="p-5 rounded-2xl glass-card border border-[var(--border-subtle)] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-500">
-              Platform Configuration
-            </span>
-          </div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
             Enterprise Governance & Policy Parameters
           </h2>

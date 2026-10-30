@@ -98,11 +98,6 @@ export const OverviewPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className="text-[11px] font-mono text-[var(--text-muted)] bg-[var(--surface-muted)] px-2 py-1 rounded-lg border border-[var(--divider)]">
-              Synced: Today, 09:30 IST
-            </span>
-          </div>
         </div>
 
         {/* Slim Attention Strip with touch of red light when alert is active */}

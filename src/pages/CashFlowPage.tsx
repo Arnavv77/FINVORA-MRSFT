@@ -238,23 +238,6 @@ export const CashFlowPage: React.FC = () => {
       {/* Forecast Controls Header */}
       <div className="p-5 sm:p-6 rounded-2xl glass-card border border-[var(--card-border)] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
-              Predictive Treasury Modeling
-            </span>
-
-            {/* Risk Classification Badge */}
-            <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${riskBadge.bg}`}>
-              <span className={`w-2 h-2 rounded-full animate-pulse ${riskBadge.dot}`} />
-              <span>{riskBadge.label} ({horizonDays}d)</span>
-            </div>
-
-            {duplicateHoldExecuted && (
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 dark:text-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-800/40 px-2 py-0.5 rounded">
-                +₹6.8 L Duplicate Hold Applied
-              </span>
-            )}
-          </div>
           <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
             Multi-Horizon Cash-Flow & Working Capital Projections
           </h2>
@@ -762,9 +745,6 @@ export const CashFlowPage: React.FC = () => {
                 Telemetry Risk Drivers & Recommended Actions (Horizon {horizonDays}d)
               </h3>
             </div>
-            <span className="text-[11px] font-medium text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
-              Verified DB Records
-            </span>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
