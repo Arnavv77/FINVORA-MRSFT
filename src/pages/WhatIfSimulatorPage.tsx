@@ -594,7 +594,8 @@ export const WhatIfSimulatorPage: React.FC = () => {
         isReserveBreached: freshResult.isReserveBreached
       },
       userQuery: stagedParams.name || 'this scenario',
-      followUpSuggestions: followUps
+      followUpSuggestions: followUps,
+      simulationResult: freshResult
     };
 
     setMessages(prev => [...prev, resultMsg]);
@@ -702,27 +703,35 @@ export const WhatIfSimulatorPage: React.FC = () => {
 
   return (
     <div className="space-y-5 pb-20">
-      {/* 1. Header Bar: Compact, clean, non-intrusive */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl glass-card">
+      {/* 1. Header Bar: Clean, uncluttered, centered */}
+      <div className="max-w-5xl mx-auto w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl glass-card border border-[var(--divider)]">
         <div>
-          <div className="flex items-center gap-2 mb-0.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-              What if?
-            </h1>
-            <span className="text-[11px] font-medium text-[var(--text-muted)] bg-[var(--surface-muted)] px-2 py-0.5 rounded-md border border-[var(--divider)]">
-              Scenario Intelligence • Deterministic Mode
-            </span>
-          </div>
-          <p className="text-xs text-[var(--text-secondary)]">
-            Explore financial decisions with FINVORA.
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+            What if?
+          </h1>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+            Ask questions, model operational decisions, and stress-test cash flow with FINVORA.
           </p>
         </div>
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
           <button
+            onClick={() => setIsAdjustOpen(!isAdjustOpen)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
+              isAdjustOpen
+                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40'
+                : 'bg-[var(--surface-muted)] hover:bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-primary)]'
+            }`}
+            title="Fine-tune simulation levers manually"
+          >
+            <Sliders className="w-3.5 h-3.5 text-[var(--accent)]" />
+            <span>Manual levers</span>
+          </button>
+
+          <button
             onClick={handleNewScenario}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--surface-muted)] hover:bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-primary)] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--surface-muted)] hover:bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-primary)] transition-colors cursor-pointer"
             title="Start fresh conversation"
           >
             <RotateCcw className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
@@ -731,11 +740,11 @@ export const WhatIfSimulatorPage: React.FC = () => {
 
           <button
             onClick={() => setIsSavedListModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--surface-muted)] hover:bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-primary)] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--surface-muted)] hover:bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-primary)] transition-colors cursor-pointer"
             title="View saved scenarios"
           >
             <Bookmark className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <span>Saved scenarios ({savedScenarios.length})</span>
+            <span>Saved ({savedScenarios.length})</span>
           </button>
 
           {hasRunScenario && (
@@ -744,7 +753,7 @@ export const WhatIfSimulatorPage: React.FC = () => {
                 setSaveName(stagedParams.name || 'Simulated Scenario');
                 setIsSaveModalOpen(true);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-stone-950 hover:bg-amber-400 transition-colors shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-stone-950 hover:bg-amber-400 transition-colors shadow-xs cursor-pointer"
             >
               <Save className="w-3.5 h-3.5" />
               <span>Save</span>
@@ -753,810 +762,622 @@ export const WhatIfSimulatorPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Before the First Scenario: Spacious Centered Welcome State */}
-      {messages.length === 0 && !hasRunScenario ? (
-        <div className="p-6 sm:p-12 rounded-3xl glass-card text-center max-w-3xl mx-auto space-y-7 transition-all animate-in fade-in duration-300">
-          <div className="flex justify-center">
-            <div className="p-3.5 rounded-2xl bg-[var(--surface-muted)] border border-[var(--divider)] shadow-xs">
-              <FinvoraLogo showWordmark={false} size="md" />
+      {/* 2. Collapsible Manual Sliders Panel (Centered) */}
+      {isAdjustOpen && (
+        <div className="max-w-5xl mx-auto w-full p-5 rounded-2xl glass-card border border-[var(--accent-border)] space-y-4 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between pb-2 border-b border-[var(--divider)]">
+            <div className="flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-[var(--accent)]" />
+              <h4 className="text-sm font-bold text-[var(--text-primary)]">
+                Fine-Tune Levers (Manual Controls)
+              </h4>
+            </div>
+            <button
+              onClick={() => setIsAdjustOpen(false)}
+              className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            {/* Customer Collection Delay */}
+            <div className="space-y-1.5 p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-[var(--text-primary)]">Collection Delay</span>
+                <span className="font-mono text-rose-500 font-bold">{stagedParams.collectionDelayDays} days</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={60}
+                step={1}
+                value={stagedParams.collectionDelayDays}
+                onChange={e => setStagedParams({ ...stagedParams, collectionDelayDays: Number(e.target.value) })}
+                className="w-full accent-amber-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Revenue Change */}
+            <div className="space-y-1.5 p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-[var(--text-primary)]">Revenue Volume</span>
+                <span className={`font-mono font-bold ${stagedParams.revenueChangePct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  {stagedParams.revenueChangePct > 0 ? '+' : ''}{stagedParams.revenueChangePct}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min={-50}
+                max={50}
+                step={1}
+                value={stagedParams.revenueChangePct}
+                onChange={e => setStagedParams({ ...stagedParams, revenueChangePct: Number(e.target.value) })}
+                className="w-full accent-amber-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Operating Expenses */}
+            <div className="space-y-1.5 p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-[var(--text-primary)]">Operating Expenses</span>
+                <span className={`font-mono font-bold ${stagedParams.expenseChangePct > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                  {stagedParams.expenseChangePct > 0 ? '+' : ''}{stagedParams.expenseChangePct}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min={-50}
+                max={50}
+                step={1}
+                value={stagedParams.expenseChangePct}
+                onChange={e => setStagedParams({ ...stagedParams, expenseChangePct: Number(e.target.value) })}
+                className="w-full accent-amber-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Vendor Payment Reschedule */}
+            <div className="space-y-1.5 p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-[var(--text-primary)]">Vendor Reschedule</span>
+                <span className="font-mono text-emerald-500 font-bold">{stagedParams.paymentRescheduleDays} days</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={60}
+                step={1}
+                value={stagedParams.paymentRescheduleDays}
+                onChange={e => setStagedParams({ ...stagedParams, paymentRescheduleDays: Number(e.target.value) })}
+                className="w-full accent-amber-500 cursor-pointer"
+              />
+            </div>
+
+            {/* One-Time Capex */}
+            <div className="sm:col-span-2 space-y-1.5 p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-[var(--text-primary)]">One-Time Capex / Investment</span>
+                <span className="font-mono text-rose-500 font-bold">{formatINR(stagedParams.capexHiringCost)}</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={5000000}
+                step={100000}
+                value={stagedParams.capexHiringCost}
+                onChange={e => setStagedParams({ ...stagedParams, capexHiringCost: Number(e.target.value) })}
+                className="w-full accent-amber-500 cursor-pointer"
+              />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
-              What would you like to explore?
-            </h2>
-            <p className="text-sm text-[var(--text-secondary)] max-w-lg mx-auto leading-relaxed">
-              Describe a change to your business and explore its potential financial impact.
-            </p>
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--divider)]">
+            <button
+              onClick={() => setStagedParams(DEFAULT_SIMULATION_PARAMS)}
+              className="px-3 py-1.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+            >
+              Reset sliders
+            </button>
+            <button
+              onClick={() => handleExecuteScenario()}
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-stone-950 hover:bg-amber-400 transition-colors shadow-xs cursor-pointer"
+            >
+              Re-calculate scenario
+            </button>
           </div>
+        </div>
+      )}
 
-          {/* Prominent Multiline Input */}
-          <div className="relative text-left rounded-2xl p-1 bg-[var(--card-bg-elevated)] border border-[var(--divider)] focus-within:border-amber-500/60 focus-within:ring-2 focus-within:ring-amber-500/20 shadow-md transition-all">
-            <textarea
-              ref={textareaRef}
-              rows={3}
-              value={inputText}
-              onChange={e => setInputText(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              placeholder="What if our customers pay 15 days late next month?"
-              className="w-full p-3.5 bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none resize-none"
-            />
-            <div className="flex items-center justify-between px-3 pb-2 pt-1 border-t border-[var(--divider)]">
-              <span className="text-[11px] text-[var(--text-muted)]">
-                Press <kbd className="px-1 py-0.5 rounded bg-[var(--surface-muted)] font-mono text-[10px]">Enter</kbd> to send
-              </span>
+      {/* 3. The Main Centered Asking & Replying Chat Workspace */}
+      <div className="max-w-5xl mx-auto w-full">
+        <div className="flex flex-col h-[780px] rounded-3xl glass-card overflow-hidden border border-[var(--divider)] shadow-lg bg-[var(--card-bg)]">
+          {/* Chat Header */}
+          <div className="px-5 py-3.5 border-b border-[var(--divider)] bg-[var(--card-bg-elevated)] flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-sm shadow-xs border border-amber-500/25">
+                <Sparkles className="w-4 h-4 fill-current text-amber-500" />
+              </div>
+              <div>
+                <span className="text-sm font-bold text-[var(--text-primary)] block">
+                  FINVORA Scenario Copilot
+                </span>
+                <span className="text-[11px] text-[var(--text-muted)]">
+                  Autonomous liquidity simulation & decision modeling
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => handleSendMessage()}
-                disabled={!inputText.trim()}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-stone-950 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs"
+                onClick={() => setIsAdjustOpen(!isAdjustOpen)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-[var(--surface-muted)] hover:bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                title="Fine-tune manual levers"
               >
-                <span>Explore</span>
-                <Send className="w-3.5 h-3.5" />
+                <Sliders className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <span>Adjust Levers</span>
               </button>
             </div>
           </div>
 
-          {/* Clickable Suggestions */}
-          <div className="space-y-2.5">
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-[var(--text-muted)]">
-              Example scenario prompts
-            </span>
-            <div className="flex flex-wrap justify-center gap-2">
-              {PROMPT_SUGGESTIONS.map((suggestion, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setInputText(suggestion);
-                    textareaRef.current?.focus();
-                  }}
-                  className="px-3 py-1.5 rounded-xl text-xs bg-[var(--surface-subtle)] hover:bg-[var(--surface-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--divider)] hover:border-[var(--accent-border)] transition-all"
-                >
-                  "{suggestion}"
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Chat Messages Stream */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs sm:text-sm">
+            {messages.length === 0 ? (
+              /* Centered Welcome State inside the Big Chat */
+              <div className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-8 space-y-6 max-w-2xl mx-auto animate-in fade-in duration-300">
+                <div className="p-4 rounded-3xl bg-[var(--surface-muted)] border border-[var(--divider)] shadow-xs">
+                  <FinvoraLogo showWordmark={false} size="lg" />
+                </div>
 
-          {/* Compact Baseline Summary from Actual Dataset */}
-          <div className="pt-4 border-t border-[var(--divider)]">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
-              <div className="p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                <span className="text-[11px] text-[var(--text-muted)] block">Available Cash</span>
-                <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                  {formatINRCompact(availableCash)}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                <span className="text-[11px] text-[var(--text-muted)] block">60d Baseline Ending</span>
-                <span className="text-sm font-bold font-mono text-[var(--text-primary)]">
-                  {formatINRCompact(simulationResult.baselineEndingCash)}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                <span className="text-[11px] text-[var(--text-muted)] block">Trough Liquidity</span>
-                <span className="text-sm font-bold font-mono text-[var(--text-primary)]">
-                  {formatINRCompact(simulationResult.baselineLowestCash)}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                <span className="text-[11px] text-[var(--text-muted)] block">Safe Reserve Cap</span>
-                <span className="text-sm font-bold font-mono text-amber-600 dark:text-amber-400">
-                  ₹20.0 L
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* 3. After Conversation Starts: Two-Column Desktop Workspace (40% / 60%) */
-        <div className="space-y-4">
-          {/* Mobile Tab Switcher */}
-          <div className="flex lg:hidden rounded-xl bg-[var(--surface-muted)] p-1 border border-[var(--divider)] text-xs font-semibold">
-            <button
-              onClick={() => setActiveMobileTab('conversation')}
-              className={`flex-1 py-1.5 rounded-lg transition-all ${activeMobileTab === 'conversation'
-                  ? 'bg-[var(--card-bg-elevated)] text-[var(--text-primary)] shadow-xs'
-                  : 'text-[var(--text-muted)]'
-                }`}
-            >
-              Conversation ({messages.length})
-            </button>
-            <button
-              onClick={() => setActiveMobileTab('results')}
-              className={`flex-1 py-1.5 rounded-lg transition-all ${activeMobileTab === 'results'
-                  ? 'bg-[var(--card-bg-elevated)] text-[var(--text-primary)] shadow-xs'
-                  : 'text-[var(--text-muted)]'
-                }`}
-            >
-              Assumptions & Results
-            </button>
-          </div>
+                <div className="space-y-1.5">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
+                    What would you like to explore?
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                    Ask any question about shocks, customer payment delays, opex increases, or growth investments to simulate cash impact.
+                  </p>
+                </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {/* LEFT COLUMN: FINVORA Scenario Conversation (~40% = 5 cols) */}
-            <div
-              className={`lg:col-span-5 flex flex-col h-[700px] rounded-2xl glass-card overflow-hidden border border-[var(--divider)] ${activeMobileTab === 'results' ? 'hidden lg:flex' : 'flex'
-                }`}
-            >
-              {/* Chat Header */}
-              <div className="px-4 py-3 border-b border-[var(--divider)] bg-[var(--card-bg-elevated)] flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-[var(--accent-light)] text-[var(--accent)] flex items-center justify-center font-bold text-xs">
-                    F
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-[var(--text-primary)] block">
-                      FINVORA Scenario Copilot
-                    </span>
-                    <span className="text-[10px] text-[var(--text-muted)]">
-                      Autonomous decision assistant
-                    </span>
+                {/* Example scenario prompt buttons */}
+                <div className="space-y-2 w-full pt-2">
+                  <span className="text-xs text-[var(--text-muted)] font-medium">
+                    Try asking one of these:
+                  </span>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {PROMPT_SUGGESTIONS.map((suggestion, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setInputText(suggestion);
+                          textareaRef.current?.focus();
+                        }}
+                        className="px-3.5 py-2 rounded-xl text-xs bg-[var(--surface-subtle)] hover:bg-[var(--surface-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--divider)] hover:border-[var(--accent-border)] transition-all cursor-pointer text-left"
+                      >
+                        "{suggestion}"
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <span className="text-[10px] text-[var(--text-muted)] bg-[var(--surface-muted)] px-2 py-0.5 rounded border border-[var(--divider)]">
-                  Rev #{scenarioRevision}
-                </span>
-              </div>
 
-              {/* Chat Message Stream */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
-                {messages.map(msg => (
-                  <div
-                    key={msg.id}
-                    className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-                  >
-                    <div className="flex items-center gap-1.5 mb-1 px-1">
-                      <span className="text-[10px] font-medium text-[var(--text-muted)]">
-                        {msg.sender === 'user' ? 'You' : 'FINVORA'}
+                {/* Baseline Metrics Bar */}
+                <div className="w-full pt-4 border-t border-[var(--divider)]">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-left text-xs">
+                    <div className="p-2.5 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+                      <span className="text-[10px] text-[var(--text-muted)] block">Available Cash</span>
+                      <span className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                        {formatINRCompact(availableCash)}
                       </span>
-                      <span className="text-[10px] text-[var(--text-muted)]">• {msg.timestamp}</span>
                     </div>
+                    <div className="p-2.5 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+                      <span className="text-[10px] text-[var(--text-muted)] block">60d Ending</span>
+                      <span className="text-xs font-bold font-mono text-[var(--text-primary)]">
+                        {formatINRCompact(simulationResult.baselineEndingCash)}
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+                      <span className="text-[10px] text-[var(--text-muted)] block">Trough Liquidity</span>
+                      <span className="text-xs font-bold font-mono text-[var(--text-primary)]">
+                        {formatINRCompact(simulationResult.baselineLowestCash)}
+                      </span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+                      <span className="text-[10px] text-[var(--text-muted)] block">Safe Reserve</span>
+                      <span className="text-xs font-bold font-mono text-amber-600 dark:text-amber-400">
+                        ₹20.0 L
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Message Stream */
+              messages.map(msg => (
+                <div
+                  key={msg.id}
+                  className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+                >
+                  <div className="flex items-center gap-2 mb-1 px-1">
+                    <span className="text-[11px] font-semibold text-[var(--text-muted)]">
+                      {msg.sender === 'user' ? 'You' : 'FINVORA'}
+                    </span>
+                    <span className="text-[10px] text-[var(--text-muted)]">• {msg.timestamp}</span>
+                  </div>
 
-                    <div
-                      className={`p-3.5 rounded-2xl max-w-[92%] leading-relaxed ${msg.sender === 'user'
-                          ? 'bg-amber-500 text-stone-950 font-medium rounded-tr-xs shadow-xs'
-                          : 'bg-[var(--card-bg-elevated)] text-[var(--text-primary)] border border-[var(--divider)] rounded-tl-xs shadow-xs'
-                        }`}
-                    >
-                      {msg.sender === 'user' ? (
-                        <p className="whitespace-pre-wrap">{msg.text.replace(/[*#]/g, '')}</p>
-                      ) : (
-                        <CleanFormattedMessage text={msg.text} />
-                      )}
+                  <div
+                    className={`p-4 sm:p-5 rounded-2xl leading-relaxed ${
+                      msg.sender === 'user'
+                        ? 'bg-amber-500 text-stone-950 font-medium rounded-tr-xs shadow-xs max-w-[85%] text-xs sm:text-sm'
+                        : 'bg-[var(--card-bg-elevated)] text-[var(--text-primary)] border border-[var(--divider)] rounded-tl-xs shadow-xs max-w-[96%] w-full space-y-4'
+                    }`}
+                  >
+                    {msg.sender === 'user' ? (
+                      <p className="whitespace-pre-wrap">{msg.text.replace(/[*#]/g, '')}</p>
+                    ) : (
+                      <CleanFormattedMessage text={msg.text} />
+                    )}
 
-                      {/* Source Chips */}
-                      {msg.sourceChips && msg.sourceChips.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-[var(--divider)]">
-                          {msg.sourceChips.map((chip, idx) => (
-                            <span
-                              key={idx}
-                              className="text-[10px] px-2 py-0.5 rounded-md bg-[var(--surface-muted)] text-[var(--text-secondary)] font-mono"
-                            >
-                              [{chip}]
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Inline Proposed Assumptions Card */}
-                      {msg.proposedAssumptions && (
-                        <div className="mt-3 p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)] space-y-2">
-                          <div className="text-[11px] font-bold text-[var(--text-primary)] flex items-center justify-between">
-                            <span>Interpreted Levers:</span>
-                            <span className="text-[10px] text-[var(--accent)] font-mono">
-                              {msg.proposedAssumptions.horizonDays}d Horizon
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                            {msg.proposedAssumptions.collectionDelayDays > 0 && (
-                              <div className="p-1.5 rounded bg-[var(--card-bg)] border border-[var(--divider)]">
-                                <span className="text-[10px] text-[var(--text-muted)] block">Collections</span>
-                                <span className="font-semibold text-rose-500">+{msg.proposedAssumptions.collectionDelayDays}d Delay</span>
-                              </div>
-                            )}
-                            {msg.proposedAssumptions.revenueChangePct !== 0 && (
-                              <div className="p-1.5 rounded bg-[var(--card-bg)] border border-[var(--divider)]">
-                                <span className="text-[10px] text-[var(--text-muted)] block">Revenue</span>
-                                <span className={`font-semibold ${msg.proposedAssumptions.revenueChangePct > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                                  {msg.proposedAssumptions.revenueChangePct > 0 ? '+' : ''}{msg.proposedAssumptions.revenueChangePct}%
-                                </span>
-                              </div>
-                            )}
-                            {msg.proposedAssumptions.expenseChangePct !== 0 && (
-                              <div className="p-1.5 rounded bg-[var(--card-bg)] border border-[var(--divider)]">
-                                <span className="text-[10px] text-[var(--text-muted)] block">Opex</span>
-                                <span className={`font-semibold ${msg.proposedAssumptions.expenseChangePct > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                  {msg.proposedAssumptions.expenseChangePct > 0 ? '+' : ''}{msg.proposedAssumptions.expenseChangePct}%
-                                </span>
-                              </div>
-                            )}
-                            {msg.proposedAssumptions.capexHiringCost > 0 && (
-                              <div className="p-1.5 rounded bg-[var(--card-bg)] border border-[var(--divider)]">
-                                <span className="text-[10px] text-[var(--text-muted)] block">Capex (Day 15)</span>
-                                <span className="font-semibold text-rose-500">-{formatINRCompact(msg.proposedAssumptions.capexHiringCost)}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Inline Action Buttons */}
-                          <div className="flex items-center gap-2 pt-1">
-                            <button
-                              onClick={() => handleExecuteScenario(msg.proposedAssumptions)}
-                              className="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-amber-500 text-stone-950 hover:bg-amber-400 transition-colors flex items-center justify-center gap-1.5 shadow-xs"
-                            >
-                              <Play className="w-3 h-3 fill-current" />
-                              <span>Run scenario</span>
-                            </button>
-                            <button
-                              onClick={() => setIsAdjustOpen(true)}
-                              className="py-1.5 px-3 rounded-lg text-xs font-medium bg-[var(--surface-muted)] hover:bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-primary)] transition-colors"
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Result Snapshot */}
-                      {msg.resultSnapshot && (
-                        <div className="mt-2.5 pt-2 border-t border-[var(--divider)] flex items-center justify-between text-[11px] font-mono">
-                          <span>
-                            Ending:{' '}
-                            <strong className="text-[var(--text-primary)]">
-                              {formatINRCompact(msg.resultSnapshot.endingCash)}
-                            </strong>
-                          </span>
+                    {/* Source Chips */}
+                    {msg.sourceChips && msg.sourceChips.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[var(--divider)]">
+                        {msg.sourceChips.map((chip, idx) => (
                           <span
-                            className={
-                              msg.resultSnapshot.deltaCash >= 0
-                                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
-                                : 'text-rose-500 font-bold'
-                            }
-                          >
-                            {msg.resultSnapshot.deltaCash >= 0 ? '+' : ''}
-                            {formatINRCompact(msg.resultSnapshot.deltaCash)}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* What FINVORA Recommends AI Strategic Section */}
-                      {msg.sender === 'assistant' && (
-                        <>
-                          {msg.recommendation ? (
-                            <FinvoraRecommendationCard
-                              recommendation={msg.recommendation}
-                              onDraftProposal={handleCreateRecommendationProposal}
-                            />
-                          ) : msg.recommendationLoading ? (
-                            <div className="mt-3 p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/5 flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
-                              <Sparkles className="w-3.5 h-3.5 animate-spin shrink-0 text-amber-500" />
-                              <span className="text-[11px] leading-tight">
-                                FINVORA AI is synthesizing strategic recommendation from live telemetry...
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="mt-2.5 pt-2 border-t border-[var(--divider)]">
-                              <button
-                                onClick={() => handleFetchRecommendation(msg.id, msg.userQuery || msg.text)}
-                                className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold bg-gradient-to-r from-amber-500/10 via-[var(--surface-subtle)] to-amber-500/10 hover:from-amber-500/20 hover:to-amber-500/20 border border-amber-500/30 text-[var(--text-primary)] transition-all flex items-center justify-between group shadow-xs cursor-pointer"
-                              >
-                                <div className="flex items-center gap-1.5">
-                                  <Sparkles className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
-                                  <span className="font-bold text-[11px]">What FINVORA Recommends</span>
-                                </div>
-                                <div className="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                                  <span>View AI directive</span>
-                                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                </div>
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-
-                    {/* Follow-up Suggestion Chips */}
-                    {msg.followUpSuggestions && msg.followUpSuggestions.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-2 max-w-[90%]">
-                        {msg.followUpSuggestions.map((sug, idx) => (
-                          <button
                             key={idx}
-                            onClick={() => handleSendMessage(sug)}
-                            className="text-[11px] px-2.5 py-1 rounded-lg bg-[var(--surface-subtle)] hover:bg-[var(--surface-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--divider)] hover:border-[var(--accent-border)] transition-colors text-left"
+                            className="text-[10px] px-2 py-0.5 rounded-md bg-[var(--surface-muted)] text-[var(--text-secondary)] font-mono"
                           >
-                            ↳ {sug}
-                          </button>
+                            [{chip}]
+                          </span>
                         ))}
                       </div>
                     )}
-                  </div>
-                ))}
 
-                {isInterpreting && (
-                  <div className="flex items-center gap-2 p-3 rounded-2xl bg-[var(--card-bg-elevated)] border border-[var(--divider)] text-xs text-[var(--text-muted)] w-fit animate-pulse">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-spin" />
-                    <span>FINVORA is structuring financial scenario...</span>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Bottom Sticky Message Composer */}
-              <div className="p-3 border-t border-[var(--divider)] bg-[var(--card-bg-elevated)] shrink-0">
-                <div className="relative rounded-xl bg-[var(--input-bg)] border border-[var(--divider)] focus-within:border-amber-500/60 focus-within:ring-1 focus-within:ring-amber-500/30 transition-all flex items-center">
-                  <textarea
-                    ref={textareaRef}
-                    rows={1}
-                    value={inputText}
-                    onChange={e => setInputText(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                    placeholder="Ask follow-up or add assumptions..."
-                    className="flex-1 px-3 py-2 text-xs bg-transparent text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none resize-none max-h-24"
-                  />
-                  <button
-                    onClick={() => handleSendMessage()}
-                    disabled={!inputText.trim() || isInterpreting}
-                    className="m-1.5 p-2 rounded-lg bg-amber-500 text-stone-950 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-                    aria-label="Send message"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT COLUMN: Scenario Assumptions & Results (~60% = 7 cols) */}
-            <div
-              className={`lg:col-span-7 space-y-5 ${activeMobileTab === 'conversation' ? 'hidden lg:block' : 'block'
-                }`}
-            >
-              {/* If scenario has NOT run yet, show Proposed Assumptions Review Card */}
-              {!hasRunScenario ? (
-                <div className="p-6 rounded-2xl glass-card border border-[var(--divider)] space-y-5">
-                  <div className="flex items-center justify-between pb-3 border-b border-[var(--divider)]">
-                    <div>
-                      <h3 className="text-base font-bold text-[var(--text-primary)]">
-                        Proposed Scenario Assumptions
-                      </h3>
-                      <p className="text-xs text-[var(--text-secondary)]">
-                        Review structured levers before calculating cash impact
-                      </p>
-                    </div>
-                    <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-[var(--surface-muted)] text-[var(--accent)] border border-[var(--divider)]">
-                      {stagedParams.horizonDays} Days
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div className="p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                      <span className="text-[11px] text-[var(--text-muted)] block">Customer Collections</span>
-                      <span className="text-sm font-bold font-mono text-[var(--text-primary)]">
-                        {stagedParams.collectionDelayDays > 0 ? `+${stagedParams.collectionDelayDays} Days Late` : 'Standard Net-30 Terms'}
-                      </span>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                      <span className="text-[11px] text-[var(--text-muted)] block">Operating Expenses</span>
-                      <span className="text-sm font-bold font-mono text-[var(--text-primary)]">
-                        {stagedParams.expenseChangePct !== 0 ? `${stagedParams.expenseChangePct > 0 ? '+' : ''}${stagedParams.expenseChangePct}%` : 'Baseline Budget'}
-                      </span>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                      <span className="text-[11px] text-[var(--text-muted)] block">Revenue Volume</span>
-                      <span className="text-sm font-bold font-mono text-[var(--text-primary)]">
-                        {stagedParams.revenueChangePct !== 0 ? `${stagedParams.revenueChangePct > 0 ? '+' : ''}${stagedParams.revenueChangePct}%` : 'Baseline Forecast'}
-                      </span>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                      <span className="text-[11px] text-[var(--text-muted)] block">One-Time Outflow</span>
-                      <span className="text-sm font-bold font-mono text-[var(--text-primary)]">
-                        {stagedParams.capexHiringCost > 0 ? formatINR(stagedParams.capexHiringCost) : 'None'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Primary CTA */}
-                  <div className="pt-2 flex items-center gap-3">
-                    <button
-                      onClick={() => handleExecuteScenario()}
-                      className="flex-1 py-2.5 px-4 rounded-xl text-sm font-bold bg-amber-500 text-stone-950 hover:bg-amber-400 transition-colors flex items-center justify-center gap-2 shadow-sm"
-                    >
-                      <Play className="w-4 h-4 fill-current" />
-                      <span>Run scenario & calculate</span>
-                    </button>
-                    <button
-                      onClick={() => setIsAdjustOpen(!isAdjustOpen)}
-                      className="py-2.5 px-4 rounded-xl text-xs font-semibold bg-[var(--surface-muted)] hover:bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-primary)] transition-colors flex items-center gap-1.5"
-                    >
-                      <Sliders className="w-3.5 h-3.5" />
-                      <span>Manual sliders</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* Scenario Has Run: Full Results Dashboard */
-                <>
-                  {/* Summary Metric Cards */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="p-3.5 rounded-2xl glass-card border border-[var(--divider)]">
-                      <span className="text-[11px] text-[var(--text-muted)] block">Ending Cash</span>
-                      <div className="text-lg font-bold font-mono text-[var(--text-primary)] mt-0.5">
-                        {formatINRCompact(simulationResult.endingCash)}
-                      </div>
-                      <span
-                        className={`text-[11px] font-mono font-medium block mt-0.5 ${simulationResult.deltaCash >= 0
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : 'text-rose-500'
-                          }`}
-                      >
-                        {simulationResult.deltaCash >= 0 ? '+' : ''}
-                        {formatINRCompact(simulationResult.deltaCash)} vs Base
-                      </span>
-                    </div>
-
-                    <div className="p-3.5 rounded-2xl glass-card border border-[var(--divider)]">
-                      <span className="text-[11px] text-[var(--text-muted)] block">Lowest Liquidity</span>
-                      <div className="text-lg font-bold font-mono text-[var(--text-primary)] mt-0.5">
-                        {formatINRCompact(simulationResult.lowestCash)}
-                      </div>
-                      <span className="text-[11px] text-[var(--text-muted)] block mt-0.5">
-                        Reserve: ₹20.0 L
-                      </span>
-                    </div>
-
-                    <div
-                      className={`p-3.5 rounded-2xl glass-card border ${simulationResult.isNegativeCashBreached
-                          ? 'border-rose-500/50 bg-rose-500/10'
-                          : simulationResult.isReserveBreached
-                            ? 'border-amber-500/50 bg-amber-500/10'
-                            : 'border-emerald-500/30'
-                        }`}
-                    >
-                      <span className="text-[11px] text-[var(--text-muted)] block">Reserve Status</span>
-                      <div
-                        className={`text-sm font-bold mt-0.5 ${simulationResult.isNegativeCashBreached
-                            ? 'text-rose-500'
-                            : simulationResult.isReserveBreached
-                              ? 'text-amber-500'
-                              : 'text-emerald-600 dark:text-emerald-400'
-                          }`}
-                      >
-                        {simulationResult.isNegativeCashBreached
-                          ? 'Negative Cash'
-                          : simulationResult.isReserveBreached
-                            ? 'Reserve Breach'
-                            : 'Buffer Retained'}
-                      </div>
-                      <span className="text-[11px] text-[var(--text-muted)] block mt-0.5">
-                        {simulationResult.shortfallDate
-                          ? `At: ${formatDate(simulationResult.shortfallDate)}`
-                          : 'No deficits'}
-                      </span>
-                    </div>
-
-                    <div className="p-3.5 rounded-2xl glass-card border border-[var(--divider)]">
-                      <span className="text-[11px] text-[var(--text-muted)] block">Deferred Receipts</span>
-                      <div className="text-lg font-bold font-mono text-[var(--text-primary)] mt-0.5">
-                        {simulationResult.delayedBeyondHorizonAmount > 0
-                          ? formatINRCompact(simulationResult.delayedBeyondHorizonAmount)
-                          : '₹0'}
-                      </div>
-                      <span className="text-[11px] text-[var(--text-muted)] block mt-0.5">
-                        Past Day {stagedParams.horizonDays}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Primary Comparison Chart: Baseline vs Simulated */}
-                  <ChartCard
-                    title="Baseline vs Scenario Cash Trajectory"
-                    action={
-                      <div className="flex items-center gap-2 text-xs">
-                        {/* Legend Pills */}
-                        <div className="flex items-center gap-3 text-[11px] text-[var(--text-secondary)]">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-0.5 bg-emerald-500 rounded-full" />
-                            <span>Baseline</span>
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-0.5 bg-amber-500 rounded-full" />
-                            <span>Scenario</span>
+                    {/* Inline Proposed Assumptions Card */}
+                    {msg.proposedAssumptions && (
+                      <div className="p-4 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)] space-y-3">
+                        <div className="text-xs font-bold text-[var(--text-primary)] flex items-center justify-between">
+                          <span>Interpreted Levers:</span>
+                          <span className="text-[11px] text-[var(--accent)] font-mono">
+                            {msg.proposedAssumptions.horizonDays} Days Horizon
                           </span>
                         </div>
 
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                          <div className="p-2 rounded-lg bg-[var(--card-bg)] border border-[var(--divider)]">
+                            <span className="text-[10px] text-[var(--text-muted)] block">Collections</span>
+                            <span className={`font-semibold ${msg.proposedAssumptions.collectionDelayDays > 0 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>
+                              {msg.proposedAssumptions.collectionDelayDays > 0 ? `+${msg.proposedAssumptions.collectionDelayDays}d Delay` : 'Normal Net-30'}
+                            </span>
+                          </div>
+
+                          <div className="p-2 rounded-lg bg-[var(--card-bg)] border border-[var(--divider)]">
+                            <span className="text-[10px] text-[var(--text-muted)] block">Revenue</span>
+                            <span className={`font-semibold ${msg.proposedAssumptions.revenueChangePct > 0 ? 'text-emerald-500' : msg.proposedAssumptions.revenueChangePct < 0 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>
+                              {msg.proposedAssumptions.revenueChangePct !== 0 ? `${msg.proposedAssumptions.revenueChangePct > 0 ? '+' : ''}${msg.proposedAssumptions.revenueChangePct}%` : 'Baseline'}
+                            </span>
+                          </div>
+
+                          <div className="p-2 rounded-lg bg-[var(--card-bg)] border border-[var(--divider)]">
+                            <span className="text-[10px] text-[var(--text-muted)] block">Opex</span>
+                            <span className={`font-semibold ${msg.proposedAssumptions.expenseChangePct > 0 ? 'text-rose-500' : msg.proposedAssumptions.expenseChangePct < 0 ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>
+                              {msg.proposedAssumptions.expenseChangePct !== 0 ? `${msg.proposedAssumptions.expenseChangePct > 0 ? '+' : ''}${msg.proposedAssumptions.expenseChangePct}%` : 'Baseline'}
+                            </span>
+                          </div>
+
+                          <div className="p-2 rounded-lg bg-[var(--card-bg)] border border-[var(--divider)]">
+                            <span className="text-[10px] text-[var(--text-muted)] block">Capex / Hiring</span>
+                            <span className={`font-semibold ${msg.proposedAssumptions.capexHiringCost > 0 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>
+                              {msg.proposedAssumptions.capexHiringCost > 0 ? `-${formatINRCompact(msg.proposedAssumptions.capexHiringCost)}` : 'None'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Inline Actions */}
+                        <div className="flex items-center gap-2.5 pt-1">
+                          <button
+                            onClick={() => handleExecuteScenario(msg.proposedAssumptions)}
+                            className="flex-1 py-2 px-4 rounded-xl text-xs font-bold bg-amber-500 text-stone-950 hover:bg-amber-400 transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                          >
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            <span>Run scenario & calculate</span>
+                          </button>
+                          <button
+                            onClick={() => setIsAdjustOpen(true)}
+                            className="py-2 px-3 rounded-xl text-xs font-medium bg-[var(--surface-muted)] hover:bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-primary)] transition-colors cursor-pointer"
+                          >
+                            Adjust
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* If simulation result snapshot or simulationResult is on message */}
+                    {(msg.resultSnapshot || msg.simulationResult) && (
+                      <div className="space-y-4 pt-2">
+                        {/* 4 Metric Cards */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                          <div className="p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+                            <span className="text-[10px] text-[var(--text-muted)] block">Ending Cash</span>
+                            <div className="text-base font-bold font-mono text-[var(--text-primary)] mt-0.5">
+                              {formatINRCompact(msg.resultSnapshot ? msg.resultSnapshot.endingCash : simulationResult.endingCash)}
+                            </div>
+                            <span className={`text-[10px] font-mono font-medium block mt-0.5 ${(msg.resultSnapshot ? msg.resultSnapshot.deltaCash : simulationResult.deltaCash) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
+                              {(msg.resultSnapshot ? msg.resultSnapshot.deltaCash : simulationResult.deltaCash) >= 0 ? '+' : ''}
+                              {formatINRCompact(msg.resultSnapshot ? msg.resultSnapshot.deltaCash : simulationResult.deltaCash)} vs Base
+                            </span>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+                            <span className="text-[10px] text-[var(--text-muted)] block">Lowest Liquidity</span>
+                            <div className="text-base font-bold font-mono text-[var(--text-primary)] mt-0.5">
+                              {formatINRCompact(msg.resultSnapshot ? msg.resultSnapshot.lowestCash : simulationResult.lowestCash)}
+                            </div>
+                            <span className="text-[10px] text-[var(--text-muted)] block mt-0.5">
+                              Buffer: ₹20.0 L
+                            </span>
+                          </div>
+
+                          <div className={`p-3 rounded-xl border ${
+                            (msg.resultSnapshot ? msg.resultSnapshot.isReserveBreached : simulationResult.isReserveBreached)
+                              ? 'border-amber-500/40 bg-amber-500/10'
+                              : 'border-emerald-500/30 bg-emerald-500/5'
+                          }`}>
+                            <span className="text-[10px] text-[var(--text-muted)] block">Reserve Status</span>
+                            <div className={`text-xs font-bold mt-0.5 ${
+                              (msg.resultSnapshot ? msg.resultSnapshot.isReserveBreached : simulationResult.isReserveBreached)
+                                ? 'text-amber-500'
+                                : 'text-emerald-600 dark:text-emerald-400'
+                            }`}>
+                              {(msg.resultSnapshot ? msg.resultSnapshot.isReserveBreached : simulationResult.isReserveBreached)
+                                ? 'Reserve Breach'
+                                : 'Buffer Retained'}
+                            </div>
+                            <span className="text-[10px] text-[var(--text-muted)] block mt-0.5">
+                              {simulationResult.shortfallDate ? `At: ${formatDate(simulationResult.shortfallDate)}` : 'No deficits'}
+                            </span>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
+                            <span className="text-[10px] text-[var(--text-muted)] block">Deferred Receipts</span>
+                            <div className="text-base font-bold font-mono text-[var(--text-primary)] mt-0.5">
+                              {simulationResult.delayedBeyondHorizonAmount > 0
+                                ? formatINRCompact(simulationResult.delayedBeyondHorizonAmount)
+                                : '₹0'}
+                            </div>
+                            <span className="text-[10px] text-[var(--text-muted)] block mt-0.5">
+                              Past Day {stagedParams.horizonDays}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Interactive Trajectory Comparison Chart */}
+                        <div className="p-4 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)] space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-[var(--text-primary)]">
+                                Cash Flow Trajectory: Baseline vs Scenario
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-[11px] text-[var(--text-secondary)]">
+                              <span className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-0.5 bg-emerald-500 rounded-full" />
+                                <span>Baseline</span>
+                              </span>
+                              <span className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-0.5 bg-amber-500 rounded-full" />
+                                <span>Scenario</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="h-60 w-full pt-1">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <ComposedChart
+                                data={simulationResult.simulatedPoints}
+                                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                              >
+                                <CartesianGrid
+                                  stroke={isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}
+                                  strokeDasharray="3 3"
+                                  vertical={false}
+                                />
+                                <XAxis
+                                  dataKey="date"
+                                  stroke="var(--text-muted)"
+                                  tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
+                                  tickLine={false}
+                                  tickFormatter={val => val.slice(5)}
+                                />
+                                <YAxis
+                                  stroke="var(--text-muted)"
+                                  tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
+                                  tickLine={false}
+                                  tickFormatter={val => formatINRCompact(val)}
+                                  domain={['auto', 'auto']}
+                                />
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: 'var(--chart-tooltip-bg)',
+                                    borderColor: 'var(--chart-tooltip-border)',
+                                    borderRadius: '12px',
+                                    color: 'var(--chart-tooltip-text)',
+                                    fontSize: '11px',
+                                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                                  }}
+                                  formatter={(val: any, name: any) => [
+                                    formatINR(Number(val)),
+                                    name === 'simulated' ? 'Scenario' : 'Baseline'
+                                  ]}
+                                />
+                                <ReferenceLine
+                                  y={2000000}
+                                  stroke="#F59E0B"
+                                  strokeDasharray="3 3"
+                                  strokeOpacity={0.6}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey="baseline"
+                                  stroke="#10B981"
+                                  strokeWidth={2}
+                                  dot={false}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey="simulated"
+                                  stroke="#F59E0B"
+                                  strokeWidth={2.5}
+                                  strokeDasharray={simulationResult.deltaCash === 0 ? undefined : '5 5'}
+                                  dot={false}
+                                />
+                              </ComposedChart>
+                            </ResponsiveContainer>
+                          </div>
+
+                          <div className="pt-2 border-t border-[var(--divider)] flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
+                            <span className="text-[10px] text-[var(--text-muted)]">
+                              Reserve threshold: ₹20.0 L safe buffer
+                            </span>
+                            <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                              <span>Net Modeled Variance:</span>
+                              <span className={(msg.resultSnapshot ? msg.resultSnapshot.deltaCash : simulationResult.deltaCash) >= 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-500 font-bold'}>
+                                {(msg.resultSnapshot ? msg.resultSnapshot.deltaCash : simulationResult.deltaCash) >= 0 ? '+' : ''}
+                                {formatINR(msg.resultSnapshot ? msg.resultSnapshot.deltaCash : simulationResult.deltaCash)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Grounded Key Financial Drivers */}
+                        {simulationResult.explanation && simulationResult.explanation.length > 0 && (
+                          <div className="p-3.5 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)] space-y-2">
+                            <span className="text-xs font-bold text-[var(--text-primary)] block">
+                              Grounded Drivers & Observations:
+                            </span>
+                            <div className="space-y-1.5 text-xs text-[var(--text-secondary)]">
+                              {simulationResult.explanation.map((item, idx) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                  <span className="text-amber-500 shrink-0 font-bold">•</span>
+                                  <span>{item}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* What FINVORA Recommends Section */}
+                    {msg.sender === 'assistant' && (
+                      <>
+                        {msg.recommendation ? (
+                          <FinvoraRecommendationCard
+                            recommendation={msg.recommendation}
+                            onDraftProposal={handleCreateRecommendationProposal}
+                          />
+                        ) : msg.recommendationLoading ? (
+                          <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/5 flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
+                            <Sparkles className="w-4 h-4 animate-spin shrink-0 text-amber-500" />
+                            <span className="text-xs">
+                              FINVORA AI is synthesizing strategic recommendation from live telemetry...
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="pt-2 border-t border-[var(--divider)]">
+                            <button
+                              onClick={() => handleFetchRecommendation(msg.id, msg.userQuery || msg.text)}
+                              className="w-full py-2 px-3 rounded-xl text-xs font-semibold bg-gradient-to-r from-amber-500/10 via-[var(--surface-subtle)] to-amber-500/10 hover:from-amber-500/20 hover:to-amber-500/20 border border-amber-500/30 text-[var(--text-primary)] transition-all flex items-center justify-between group shadow-xs cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
+                                <span className="font-bold text-xs">What FINVORA Recommends</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                                <span>View AI strategic directive</span>
+                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                              </div>
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Follow-up Suggestion Chips */}
+                  {msg.followUpSuggestions && msg.followUpSuggestions.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2 max-w-[95%]">
+                      {msg.followUpSuggestions.map((sug, idx) => (
                         <button
-                          onClick={() => setIsAdjustOpen(!isAdjustOpen)}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs bg-[var(--surface-muted)] hover:bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-primary)] transition-colors ml-2"
+                          key={idx}
+                          onClick={() => handleSendMessage(sug)}
+                          className="text-[11px] px-3 py-1.5 rounded-xl bg-[var(--surface-subtle)] hover:bg-[var(--surface-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--divider)] hover:border-[var(--accent-border)] transition-colors text-left cursor-pointer"
                         >
-                          <Sliders className="w-3 h-3 text-[var(--accent)]" />
-                          <span>Adjust</span>
+                          ↳ {sug}
                         </button>
-                      </div>
-                    }
-                  >
-                    <div className="h-72 w-full pt-1">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart
-                          data={simulationResult.simulatedPoints}
-                          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                        >
-                          <CartesianGrid
-                            stroke={isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}
-                            strokeDasharray="3 3"
-                            vertical={false}
-                          />
-                          <XAxis
-                            dataKey="date"
-                            stroke="var(--text-muted)"
-                            tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
-                            tickLine={false}
-                            tickFormatter={val => val.slice(5)}
-                          />
-                          <YAxis
-                            stroke="var(--text-muted)"
-                            tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
-                            tickLine={false}
-                            tickFormatter={val => formatINRCompact(val)}
-                            domain={['auto', 'auto']}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: 'var(--chart-tooltip-bg)',
-                              borderColor: 'var(--chart-tooltip-border)',
-                              borderRadius: '12px',
-                              color: 'var(--chart-tooltip-text)',
-                              fontSize: '12px',
-                              boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
-                            }}
-                            formatter={(val: any, name: any) => [
-                              formatINR(Number(val)),
-                              name === 'simulated' ? 'Scenario' : 'Baseline'
-                            ]}
-                          />
-                          {/* Safe reserve threshold reference */}
-                          <ReferenceLine
-                            y={2000000}
-                            stroke="#F59E0B"
-                            strokeDasharray="3 3"
-                            strokeOpacity={0.6}
-                          />
-                          {/* Baseline Line */}
-                          <Line
-                            type="monotone"
-                            dataKey="baseline"
-                            stroke="#10B981"
-                            strokeWidth={2}
-                            dot={false}
-                          />
-                          {/* Simulated Line */}
-                          <Line
-                            type="monotone"
-                            dataKey="simulated"
-                            stroke="#F59E0B"
-                            strokeWidth={2.5}
-                            strokeDasharray={
-                              simulationResult.deltaCash === 0 ? undefined : '5 5'
-                            }
-                            dot={false}
-                          />
-                        </ComposedChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <div className="mt-2.5 pt-2 border-t border-[var(--divider)] flex items-center justify-between text-xs text-[var(--text-secondary)]">
-                      <span className="text-[11px] text-[var(--text-muted)]">
-                        Reserve threshold: ₹20.0 L safe buffer
-                      </span>
-                      <div className="flex items-center gap-1.5 font-mono text-xs">
-                        <span className="text-[var(--text-secondary)] font-sans text-[11px]">
-                          Variance:
-                        </span>
-                        <span
-                          className={
-                            simulationResult.deltaCash >= 0
-                              ? 'text-emerald-600 dark:text-emerald-400 font-bold'
-                              : 'text-rose-500 font-bold'
-                          }
-                        >
-                          {simulationResult.deltaCash >= 0 ? '+' : ''}
-                          {formatINR(simulationResult.deltaCash)}
-                        </span>
-                      </div>
-                    </div>
-                  </ChartCard>
-
-                  {/* Grounded Explanation & Driver Analysis */}
-                  <div className="p-5 rounded-2xl glass-card border border-[var(--divider)] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--accent)] flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Financial Analysis & Key Drivers</span>
-                      </h4>
-                      <span className="text-[11px] text-[var(--text-muted)]">
-                        Grounded on live ledger
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 text-xs text-[var(--text-secondary)] leading-relaxed">
-                      {simulationResult.explanation.map((item, idx) => (
-                        <div key={idx} className="flex items-start gap-2">
-                          <span className="text-amber-500 shrink-0 mt-0.5">•</span>
-                          <span>{item}</span>
-                        </div>
                       ))}
                     </div>
-
-                    {/* Operational Action CTA */}
-                    <div className="pt-3 border-t border-[var(--divider)] flex flex-wrap items-center justify-between gap-3">
-                      <div className="text-[11px] text-[var(--text-muted)]">
-                        Ready to formalize defensive measures for this scenario?
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setSaveName(stagedParams.name || 'Simulated Scenario');
-                            setIsSaveModalOpen(true);
-                          }}
-                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--surface-muted)] hover:bg-[var(--surface-subtle)] border border-[var(--divider)] text-[var(--text-primary)] transition-colors"
-                        >
-                          Save scenario
-                        </button>
-                        <button
-                          onClick={() => setIsProposalModalOpen(true)}
-                          className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-stone-950 hover:bg-amber-400 transition-colors shadow-xs flex items-center gap-1.5"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Create proposal</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Collapsible Manual Sliders Panel */}
-              {isAdjustOpen && (
-                <div className="p-5 rounded-2xl glass-card border border-[var(--accent-border)] space-y-4 animate-in fade-in duration-200">
-                  <div className="flex items-center justify-between pb-2 border-b border-[var(--divider)]">
-                    <div className="flex items-center gap-2">
-                      <Sliders className="w-4 h-4 text-[var(--accent)]" />
-                      <h4 className="text-sm font-bold text-[var(--text-primary)]">
-                        Fine-Tune Levers (Manual Controls)
-                      </h4>
-                    </div>
-                    <button
-                      onClick={() => setIsAdjustOpen(false)}
-                      className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                    >
-                      Close
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    {/* Customer Collection Delay */}
-                    <div className="space-y-1.5 p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-[var(--text-primary)]">Collection Delay</span>
-                        <span className="font-mono text-rose-500 font-bold">{stagedParams.collectionDelayDays} days</span>
-                      </div>
-                      <input
-                        type="range"
-                        min={0}
-                        max={60}
-                        step={1}
-                        value={stagedParams.collectionDelayDays}
-                        onChange={e => setStagedParams({ ...stagedParams, collectionDelayDays: Number(e.target.value) })}
-                        className="w-full accent-amber-500 cursor-pointer"
-                      />
-                    </div>
-
-                    {/* Revenue Change */}
-                    <div className="space-y-1.5 p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-[var(--text-primary)]">Revenue Volume</span>
-                        <span className={`font-mono font-bold ${stagedParams.revenueChangePct >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                          {stagedParams.revenueChangePct > 0 ? '+' : ''}{stagedParams.revenueChangePct}%
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min={-50}
-                        max={50}
-                        step={1}
-                        value={stagedParams.revenueChangePct}
-                        onChange={e => setStagedParams({ ...stagedParams, revenueChangePct: Number(e.target.value) })}
-                        className="w-full accent-amber-500 cursor-pointer"
-                      />
-                    </div>
-
-                    {/* Operating Expenses */}
-                    <div className="space-y-1.5 p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-[var(--text-primary)]">Operating Expenses</span>
-                        <span className={`font-mono font-bold ${stagedParams.expenseChangePct > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                          {stagedParams.expenseChangePct > 0 ? '+' : ''}{stagedParams.expenseChangePct}%
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min={-50}
-                        max={50}
-                        step={1}
-                        value={stagedParams.expenseChangePct}
-                        onChange={e => setStagedParams({ ...stagedParams, expenseChangePct: Number(e.target.value) })}
-                        className="w-full accent-amber-500 cursor-pointer"
-                      />
-                    </div>
-
-                    {/* Vendor Payment Reschedule */}
-                    <div className="space-y-1.5 p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-[var(--text-primary)]">Vendor Reschedule</span>
-                        <span className="font-mono text-emerald-500 font-bold">{stagedParams.paymentRescheduleDays} days</span>
-                      </div>
-                      <input
-                        type="range"
-                        min={0}
-                        max={60}
-                        step={1}
-                        value={stagedParams.paymentRescheduleDays}
-                        onChange={e => setStagedParams({ ...stagedParams, paymentRescheduleDays: Number(e.target.value) })}
-                        className="w-full accent-amber-500 cursor-pointer"
-                      />
-                    </div>
-
-                    {/* One-Time Capex */}
-                    <div className="sm:col-span-2 space-y-1.5 p-3 rounded-xl bg-[var(--surface-subtle)] border border-[var(--divider)]">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-[var(--text-primary)]">One-Time Capex / Investment</span>
-                        <span className="font-mono text-rose-500 font-bold">{formatINR(stagedParams.capexHiringCost)}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min={0}
-                        max={5000000}
-                        step={100000}
-                        value={stagedParams.capexHiringCost}
-                        onChange={e => setStagedParams({ ...stagedParams, capexHiringCost: Number(e.target.value) })}
-                        className="w-full accent-amber-500 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--divider)]">
-                    <button
-                      onClick={() => setStagedParams(DEFAULT_SIMULATION_PARAMS)}
-                      className="px-3 py-1.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                    >
-                      Reset sliders
-                    </button>
-                    <button
-                      onClick={() => handleExecuteScenario()}
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 text-stone-950 hover:bg-amber-400 transition-colors shadow-xs"
-                    >
-                      Re-calculate scenario
-                    </button>
-                  </div>
+                  )}
                 </div>
-              )}
+              ))
+            )}
+
+            {isInterpreting && (
+              <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-[var(--card-bg-elevated)] border border-[var(--divider)] text-xs text-[var(--text-muted)] w-fit animate-pulse">
+                <Sparkles className="w-4 h-4 text-amber-500 animate-spin" />
+                <span>FINVORA is structuring financial scenario...</span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Sticky Bottom Message Composer */}
+          <div className="p-3.5 sm:p-4 border-t border-[var(--divider)] bg-[var(--card-bg-elevated)] shrink-0 space-y-2">
+            {messages.length > 0 && (
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
+                <span className="text-[10px] text-[var(--text-muted)] font-medium shrink-0">Quick prompts:</span>
+                {PROMPT_SUGGESTIONS.slice(0, 3).map((suggestion, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSendMessage(suggestion)}
+                    className="px-2.5 py-1 rounded-lg bg-[var(--surface-subtle)] hover:bg-[var(--surface-muted)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--divider)] transition-colors whitespace-nowrap cursor-pointer shrink-0"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="relative rounded-2xl bg-[var(--input-bg)] border border-[var(--divider)] focus-within:border-amber-500/60 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all flex items-center p-1">
+              <textarea
+                ref={textareaRef}
+                rows={2}
+                value={inputText}
+                onChange={e => setInputText(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                placeholder="Ask any scenario question... (e.g. What if client collections are delayed by 20 days?)"
+                className="flex-1 px-3.5 py-2 text-xs sm:text-sm bg-transparent text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none resize-none leading-relaxed"
+              />
+              <div className="flex flex-col items-end gap-1 mr-1">
+                <button
+                  onClick={() => handleSendMessage()}
+                  disabled={!inputText.trim() || isInterpreting}
+                  className="px-4 py-2 rounded-xl bg-amber-500 text-stone-950 font-bold hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 shadow-xs cursor-pointer text-xs"
+                  aria-label="Send message"
+                >
+                  <span>Explore</span>
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between px-1 text-[10px] text-[var(--text-muted)]">
+              <span>Press <kbd className="px-1 py-0.5 rounded bg-[var(--surface-muted)] font-mono text-[9px]">Enter</kbd> to explore • <kbd className="px-1 py-0.5 rounded bg-[var(--surface-muted)] font-mono text-[9px]">Shift + Enter</kbd> for new line</span>
+              <span>Grounded on live financial ledger</span>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* 4. Modal: Save Scenario */}
       {isSaveModalOpen && (

@@ -246,6 +246,7 @@ export interface ScenarioChatMessage {
   recommendation?: FinvoraRecommendation;
   recommendationLoading?: boolean;
   userQuery?: string;
+  simulationResult?: SimulationResult;
 }
 
 export interface DecisionProposal {
