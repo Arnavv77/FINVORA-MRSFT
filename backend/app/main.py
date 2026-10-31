@@ -59,6 +59,40 @@ app.include_router(budget_router)
 app.include_router(copilot_router)
 app.include_router(ask_router)
 app.include_router(cafie_router)
+from .cafie.model3.router import router as cafie_model3_router
+app.include_router(cafie_model3_router)
+from .cafie.model4.router import router as cafie_model4_router
+app.include_router(cafie_model4_router)
+
+# ── IDP Multi-Mode Payment Intelligence & Automated Reconciliation ────────────
+from .idp.payment_intelligence.models import (
+    IDPCompany,
+    IDPDebtorLedger,
+    IDPInvoice,
+    IDPPayment,
+    IDPReconciliationRecommendation,
+    IDPApprovalDecision,
+    IDPERPPostingVoucher,
+    IDPMemoryFeedback,
+    IDPFederatedModel,
+)
+from .idp.payment_intelligence.router import router as idp_payment_router
+app.include_router(idp_payment_router)
+
+# ── Company Ledger & Manager Approval Workflow ────────────────────────────────
+from .company_ledger.models import (
+    LedgerCompany,
+    LedgerAccount,
+    LedgerTransaction,
+    LedgerEntryLine,
+    LedgerTransactionApproval,
+    LedgerAuditLog,
+    LedgerTransactionComment,
+)
+from .company_ledger.router import router as company_ledger_router
+app.include_router(company_ledger_router)
+Base.metadata.create_all(bind=engine)
+
 
 
 

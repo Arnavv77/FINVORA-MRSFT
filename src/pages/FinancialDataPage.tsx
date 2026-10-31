@@ -177,7 +177,13 @@ export const FinancialDataPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Health:</span>
-                  <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">{src.healthScore}%</span>
+                  <span className={`font-mono font-semibold ${
+                    src.healthScore >= 80 
+                      ? 'text-emerald-600 dark:text-emerald-400' 
+                      : src.healthScore >= 70 
+                        ? 'text-amber-500 dark:text-amber-400' 
+                        : 'text-rose-500 dark:text-rose-400'
+                  }`}>{src.healthScore}%</span>
                 </div>
                 <div className="text-[10px] text-[var(--text-muted)] pt-1">
                   Synced: {src.lastSyncTime}
@@ -550,8 +556,8 @@ export const FinancialDataPage: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between text-xs pb-2 border-b border-[var(--divider)]">
               <span className="text-[var(--text-secondary)]">File: <strong className="text-[var(--text-primary)]">{importedFile?.name || 'statement.csv'}</strong></span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> 100% Column Mapping Validated
+              <span className="text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> 65% Column Mapping Validated
               </span>
             </div>
 

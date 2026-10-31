@@ -212,7 +212,18 @@ export const FinancialProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const [sources, setSources] = useState<SourceConnection[]>(() => {
     const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_sources`);
-    return saved ? JSON.parse(saved) : INITIAL_DATA_SOURCES;
+    if (saved) {
+      try {
+        const parsed: SourceConnection[] = JSON.parse(saved);
+        return parsed.map(s => {
+          const init = INITIAL_DATA_SOURCES.find(i => i.id === s.id);
+          return init ? { ...s, healthScore: init.healthScore } : s;
+        });
+      } catch {
+        return INITIAL_DATA_SOURCES;
+      }
+    }
+    return INITIAL_DATA_SOURCES;
   });
 
   const [qualityIssues] = useState<DataQualityIssue[]>(INITIAL_DATA_QUALITY_ISSUES);

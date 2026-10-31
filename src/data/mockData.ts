@@ -20,7 +20,7 @@ export const INITIAL_DATA_SOURCES: SourceConnection[] = [
     status: 'connected',
     lastSyncTime: '12 minutes ago',
     recordCount: 1420,
-    healthScore: 99,
+    healthScore: 74,
     accountNumber: '••••••••8901',
     description: 'Primary operating account for enterprise payroll & vendor RTGS/NEFT'
   },
@@ -31,7 +31,7 @@ export const INITIAL_DATA_SOURCES: SourceConnection[] = [
     status: 'connected',
     lastSyncTime: '28 minutes ago',
     recordCount: 3890,
-    healthScore: 97,
+    healthScore: 71,
     accountNumber: 'PRD-IND-01',
     description: 'Enterprise ERP for purchase orders, general ledger, and inventory'
   },
@@ -42,7 +42,7 @@ export const INITIAL_DATA_SOURCES: SourceConnection[] = [
     status: 'connected',
     lastSyncTime: '5 minutes ago',
     recordCount: 850,
-    healthScore: 100,
+    healthScore: 76,
     accountNumber: 'acc_rzp_9841',
     description: 'Automated 24x7 instant vendor payouts and contractor disbursements'
   },
@@ -53,7 +53,7 @@ export const INITIAL_DATA_SOURCES: SourceConnection[] = [
     status: 'connected',
     lastSyncTime: '1 hour ago',
     recordCount: 2120,
-    healthScore: 94,
+    healthScore: 68,
     accountNumber: 'ORG-600129',
     description: 'Accounts receivable tracking, e-invoicing and GST portal integration'
   },
@@ -64,7 +64,7 @@ export const INITIAL_DATA_SOURCES: SourceConnection[] = [
     status: 'connected',
     lastSyncTime: '3 hours ago',
     recordCount: 410,
-    healthScore: 98,
+    healthScore: 73,
     accountNumber: '••••••••4432',
     description: 'Secondary liquidity reserve and cross-border SaaS subscription account'
   }

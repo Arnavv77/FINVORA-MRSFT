@@ -47,6 +47,7 @@ from ..services.cafie_engine import (
 )
 from ..services.doc_intel import extract_document_intelligence
 from ..services.erp_connectors import SAPConnector, WMSConnector
+from ..services.sap_client import get_sap_client, SAP_SERVICES
 
 from pydantic import BaseModel, Field
 from ..services.cafie_model2_engine import (
@@ -162,7 +163,7 @@ def get_cafie_overview(db: Session = Depends(get_db)):
         },
         "recent_investigations": recent_list,
         "connectors": {
-            "sap_status": "API_CONNECTED",
+            "sap_status": get_sap_client().get_operational_status(),
             "wms_status": "API_CONNECTED",
             "ocr_status": "OPERATIONAL",
         },
@@ -746,4 +747,129 @@ def get_governance_audit(company_id: int = Query(1), limit: int = Query(50), db:
             for r in records
         ],
         "count": len(records),
+    }
+
+
+# ── 12. SAP Integration Services & Diagnostics ──────────────────────────────
+@router.get("/sap/health")
+def get_sap_health():
+    """
+    Returns connection and diagnostic status for all four SAP S/4HANA OData v2 services:
+    - Purchase Order: API_PURCHASEORDER_2
+    - Supplier Invoice: API_SUPPLIERINVOICE_PROCESS_SRV_0001
+    - Material Document: API_MATERIAL_DOCUMENT
+    - Business Partner: API_BUSINESS_PARTNER
+    """
+    client = get_sap_client()
+    return client.check_all_services_health()
+
+
+@router.post("/sap/test-connection")
+def test_sap_connection():
+    """
+    Actively triggers connection testing across all four SAP services.
+    Reports which services are CONFIGURED, TESTED_OK, UNAVAILABLE, or running in MOCK_MODE.
+    """
+    client = get_sap_client()
+    return client.check_all_services_health()
+
+
+@router.get("/sap/services")
+def list_sap_services():
+    """Returns metadata, canonical paths, and operational modes for the 4 SAP services."""
+    client = get_sap_client()
+    return {
+        "base_url": client._mask_url(client.base_url) if client.base_url else "UNCONFIGURED",
+        "auth_method": client.auth_method,
+        "operational_status": client.get_operational_status(),
+        "services": [
+            {
+                "key": k,
+                "service_id": v["service_id"],
+                "display_name": v["display_name"],
+                "configured_path": client.service_paths.get(k, v["default_path"]),
+                "default_path": v["default_path"],
+                "status": client.check_service_health(k)["status"],
+            }
+            for k, v in SAP_SERVICES.items()
+        ],
+    }
+
+
+class SAPReconcileRequest(BaseModel):
+    po_number: Optional[str] = "PO-0412"
+    invoice_number: Optional[str] = "INV-0412"
+    grn_number: Optional[str] = "GRN-0412"
+    vendor_code: Optional[str] = "VEND-ORION-01"
+    company_id: int = 1
+
+
+@router.post("/sap/reconcile")
+def reconcile_sap_transaction(
+    payload: SAPReconcileRequest = Body(...),
+    db: Session = Depends(get_db),
+):
+    """
+    Fetches PO, GRN, and Supplier Invoice from SAP (or deterministic mock if offline),
+    normalizes them, runs 3-way matching, and evaluates vendor historical risk memory
+    even when three-way matching passes.
+    """
+    client = get_sap_client()
+
+    # 1. Fetch & normalize records from the 4 SAP services
+    po_data = client.get_purchase_order(payload.po_number or "PO-0412")
+    invoice_data = client.get_supplier_invoice(payload.invoice_number or "INV-0412")
+    grn_data = client.get_material_document(payload.grn_number or "GRN-0412")
+    bp_data = client.get_business_partner(payload.vendor_code or "VEND-ORION-01")
+
+    # 2. Perform line-item three-way matching
+    three_way_res = client.reconcile_three_way(po_data, grn_data, invoice_data)
+
+    # 3. Retrieve or lookup vendor from database
+    vendor = db.query(Vendor).filter(
+        (Vendor.name.ilike("%Orion%")) | (Vendor.id == 1)
+    ).first()
+    vendor_id = vendor.id if vendor else 1
+
+    # 4. Apply vendor historical memory EVEN WHEN THREE-WAY MATCHING PASSES!
+    memory_risk_res = client.apply_vendor_memory_and_risk(
+        db=db,
+        vendor_id=vendor_id,
+        invoice_id=None,
+        three_way_result=three_way_res,
+        company_id=payload.company_id,
+    )
+
+    # 5. Log integration event
+    db.add(ERPIntegrationLog(
+        system_type="SAP_ERP",
+        action="THREE_WAY_RECONCILE",
+        status="API_CONNECTED" if client.is_live else "SIMULATED",
+        entity_reference=f"{payload.po_number}|{payload.invoice_number}",
+        payload=payload.dict(),
+        response_data={
+            "three_way_passed": three_way_res["reconciliation_passed"],
+            "policy_gate": memory_risk_res["policy_gate"],
+            "risk_level": memory_risk_res["risk_level"],
+        },
+    ))
+    db.commit()
+
+    return {
+        "status": "success",
+        "sap_mode": client.mode,
+        "services_used": [
+            "API_PURCHASEORDER_2",
+            "API_SUPPLIERINVOICE_PROCESS_SRV_0001",
+            "API_MATERIAL_DOCUMENT",
+            "API_BUSINESS_PARTNER",
+        ],
+        "normalized_records": {
+            "purchase_order": po_data,
+            "supplier_invoice": invoice_data,
+            "goods_receipt": grn_data,
+            "business_partner": bp_data,
+        },
+        "three_way_matching": three_way_res,
+        "vendor_memory_intelligence": memory_risk_res,
     }

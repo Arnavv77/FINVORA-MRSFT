@@ -11,6 +11,7 @@ import { APExpensesPage } from './pages/APExpensesPage';
 import { BudgetIntelligencePage } from './pages/BudgetIntelligencePage';
 import { WhatIfSimulatorPage } from './pages/WhatIfSimulatorPage';
 import { DecisionsApprovalsPage } from './pages/DecisionsApprovalsPage';
+import { CompanyLedgerPage } from './pages/CompanyLedgerPage';
 import { ContextAwareIntelligencePage } from './pages/ContextAwareIntelligencePage';
 import { DataConnectionsPage } from './pages/DataConnectionsPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -41,6 +42,7 @@ export const AppRoutes: React.FC = () => {
       >
         <Route index element={<OverviewPage />} />
         <Route path="financial-data" element={<FinancialDataPage />} />
+        <Route path="company-ledger" element={<CompanyLedgerPage />} />
         <Route path="risk-anomalies" element={<RiskAnomaliesPage />} />
         <Route path="cash-flow" element={<CashFlowPage />} />
         <Route path="ap-expenses" element={<APExpensesPage />} />

@@ -79,7 +79,13 @@ export const DataConnectionsPage: React.FC = () => {
               </div>
               <div className="flex justify-between text-[var(--text-secondary)]">
                 <span>Pipeline Health:</span>
-                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">{src.healthScore}% SLA</span>
+                <span className={`font-mono font-semibold ${
+                  src.healthScore >= 80 
+                    ? 'text-emerald-600 dark:text-emerald-400' 
+                    : src.healthScore >= 70 
+                      ? 'text-amber-500 dark:text-amber-400' 
+                      : 'text-rose-500 dark:text-rose-400'
+                }`}>{src.healthScore}% SLA</span>
               </div>
               <div className="flex justify-between text-[var(--text-secondary)]">
                 <span>Last Polled:</span>

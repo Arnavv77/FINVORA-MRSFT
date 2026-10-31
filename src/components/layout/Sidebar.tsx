@@ -13,7 +13,8 @@ import {
   Network,
   Settings,
   Info,
-  X
+  X,
+  FileSpreadsheet
 } from 'lucide-react';
 import { useFinancial } from '../../context/FinancialContext';
 
@@ -41,6 +42,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       to: '/financial-data',
       label: 'Financial Data',
       icon: <Database className="w-[18px] h-[18px] shrink-0" />
+    },
+    {
+      to: '/company-ledger',
+      label: 'Company Ledger',
+      icon: <FileSpreadsheet className="w-[18px] h-[18px] shrink-0 text-blue-500" />
     },
     {
       to: '/risk-anomalies',
@@ -118,9 +124,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 w-[232px] bg-[var(--sidebar-bg)] border-r border-[var(--sidebar-border)] backdrop-blur-2xl flex flex-col justify-between transition-transform duration-200 lg:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed top-0 bottom-0 left-0 z-40 w-[232px] bg-[var(--sidebar-bg)] border-r border-[var(--sidebar-border)] backdrop-blur-2xl flex flex-col justify-between transition-transform duration-200 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         {/* Brand Header with custom Finvora logo */}
         <div>
@@ -148,10 +153,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 to={item.to}
                 onClick={onClose}
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-medium transition-all ${
-                    isActive
-                      ? 'bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent-border)] font-semibold shadow-xs'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-muted)]'
+                  `flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-medium transition-all ${isActive
+                    ? 'bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent-border)] font-semibold shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-muted)]'
                   }`
                 }
               >
@@ -179,10 +183,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               to={item.to}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all ${
-                  isActive
-                    ? 'bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent-border)] font-semibold'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-muted)]'
+                `flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all ${isActive
+                  ? 'bg-[var(--accent-light)] text-[var(--accent)] border border-[var(--accent-border)] font-semibold'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-muted)]'
                 }`
               }
             >
